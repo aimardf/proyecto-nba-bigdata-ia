@@ -1,0 +1,32 @@
+# Entorno Hadoop + Hive para el proyecto (imágenes bde2020).
+# Si algún tag no está disponible, revisar en Docker Hub la versión vigente.
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    environment: [CLUSTER_NAME=nba]
+    env_file: [./hadoop.env]
+    ports: ["9870:9870", "9000:9000"]
+    volumes: [namenode:/hadoop/dfs/name]
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    env_file: [./hadoop.env]
+    environment: ["SERVICE_PRECONDITION=namenode:9870"]
+    volumes: [datanode:/hadoop/dfs/data]
+  hive-metastore-db:
+    image: bde2020/hive-metastore-postgresql:2.3.0
+    container_name: hive-metastore-db
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-metastore
+    env_file: [./hadoop.env]
+    command: /opt/hive/bin/hive --service metastore
+    environment: ["SERVICE_PRECONDITION=namenode:9870 datanode:9864 hive-metastore-db:5432"]
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-server
+    env_file: [./hadoop.env]
+    environment: ["HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore/metastore", "SERVICE_PRECONDITION=hive-metastore:9083"]
+    ports: ["10000:10000"]
+volumes: {namenode: {}, datanode: {}}
