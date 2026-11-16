@@ -1,6 +1,6 @@
 # Proyecto NBA · Big Data + IA
 
-Predicción del ganador de un partido (clasificación) y de los puntos de un jugador (regresión) con datos de la NBA, usando Hadoop (HDFS + Hive, sin PySpark), MLflow y FastAPI.
+Predicción del ganador de un partido (clasificación) y de los puntos totales del partido (regresión) con datos de la NBA a nivel de equipo y partido (sin datos de jugadores), usando Hadoop (HDFS + Hive, sin PySpark), MLflow y FastAPI.
 
 ## Estructura
 - `hadoop/`: Docker Compose con HDFS, YARN y Hive.
@@ -16,7 +16,7 @@ docker exec namenode hdfs dfs -ls /      # evidencia: HDFS operativo
 ```
 
 ## Ingesta en bruto
-Requiere `~/.kaggle/kaggle.json`.
+Requiere `~/.kaggle/kaggle.json`. Importante: no se suben a HDFS los ficheros de jugadores ni de árbitros (minimización de datos).
 ```bash
 ./scripts/ingest_raw.sh eoinamoore/historical-nba-data-and-player-box-scores 2026-11-17
 ```
