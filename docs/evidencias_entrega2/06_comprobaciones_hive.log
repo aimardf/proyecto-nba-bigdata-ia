@@ -1,0 +1,640 @@
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/opt/hive/lib/log4j-slf4j-impl-2.6.2.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/opt/hadoop-2.7.4/share/hadoop/common/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.apache.logging.slf4j.Log4jLoggerFactory]
+ 
+
+
+
+ 
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
++----------------------------------------------------+----------+
+|                       f.paso                       | f.filas  |
++----------------------------------------------------+----------+
+| 1 games / dirty                                    | 74279    |
+| 2 games / sin duplicados                           | 73544    |
+| 3 games / curated.partidos                         | 73546    |
+| 4 team_statistics / dirty                          | 148577   |
+| 5 team_statistics / sin duplicados                 | 147106   |
+| 6 team_statistics / curated.estadisticas_equipo    | 147028   |
+| 7 team_statistics_ext / raw                        | 80342    |
+| 8 team_statistics_ext / curated.estadisticas_avanzadas | 80260    |
++----------------------------------------------------+----------+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+ 
++----------------------+-----------------------+
+|      _u1.tabla       | _u1.claves_repetidas  |
++----------------------+-----------------------+
+| estadisticas_equipo  | 0                     |
+| partidos             | 2                     |
++----------------------+-----------------------+
+
+
+
+
+
+
+
+
+
+
++------------------+----------------+
+|    _u1.tabla     | _u1.sin_fecha  |
++------------------+----------------+
+| team_statistics  | 78             |
+| games            | 0              |
++------------------+----------------+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
++-----------+---------------+
+| partidos  | no_coinciden  |
++-----------+---------------+
+| 73546     | 164           |
++-----------+---------------+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++-----------------------------+------------------------+----------------------+----------+------------+
+| local_visitante_corregidos  | marcadores_corregidos  | ganador_incoherente  | jugados  | sin_jugar  |
++-----------------------------+------------------------+----------------------+----------+------------+
+| 221                         | 370                    | 0                    | 73542    | 4          |
++-----------------------------+------------------------+----------------------+----------+------------+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
++-----------------------------------+----------------------+--------------------------------------+-------------------------------+--------------------------+
+| filas_con_valores_fuera_de_rango  | puntos_recalculados  | puntos_distintos_de_suma_de_cuartos  | datos_recuperados_con_reglas  | huecos_antes_de_imputar  |
++-----------------------------------+----------------------+--------------------------------------+-------------------------------+--------------------------+
+| 752                               | 356                  | 207                                  | 45361                         | 30075                    |
++-----------------------------------+----------------------+--------------------------------------+-------------------------------+--------------------------+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++-----------------+-----------+
+| n_filas_equipo  | partidos  |
++-----------------+-----------+
+| 0               | 37        |
+| 1               | 4         |
+| 2               | 73499     |
+| 3               | 2         |
++-----------------+-----------+
+
+
+
+ 
+
+
+
+
+
+
+
+
++-----------------------------------+
+| partidos_solo_en_team_statistics  |
++-----------------------------------+
+| 8                                 |
++-----------------------------------+
+
+
+
+
+
+ 
+
+
++---------------------+-----------+--------+--------+
+|      game_type      | partidos  | desde  | hasta  |
++---------------------+-----------+--------+--------+
+| Regular Season      | 66968     | 1946   | 2026   |
+| Playoffs            | 4526      | 1946   | 2025   |
+| Preseason           | 1940      | 2003   | 2026   |
+| NBA Emirates Cup    | 66        | 2023   | 2023   |
+| Play-in Tournament  | 37        | 2020   | 2025   |
+| All-Star Game       | 7         | 2025   | 2025   |
+| NBA Cup             | 1         | 2023   | 2023   |
+| Emirates NBA Cup    | 1         | 2025   | 2025   |
++---------------------+-----------+--------+--------+
+
+
+
+ 
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+
++--------+------------------+--------------+---------------+-------------------+----------------+
+| filas  | team_score_nulo  | fg_pct_nulo  | rebotes_nulo  | asistencias_nulo  | perdidas_nulo  |
++--------+------------------+--------------+---------------+-------------------+----------------+
+| 59256  | 0                | 0            | 0             | 0                 | 0              |
++--------+------------------+--------------+---------------+-------------------+----------------+
+
+
+
+ 
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++--------------+-----------+---------------+
+| p.temporada  | partidos  | atipicos_iqr  |
++--------------+-----------+---------------+
+| 2000         | 1189      | 11            |
+| 2001         | 1189      | 10            |
+| 2002         | 1189      | 11            |
+| 2003         | 1189      | 11            |
+| 2004         | 1230      | 16            |
+| 2005         | 1230      | 11            |
+| 2006         | 1230      | 16            |
+| 2007         | 1230      | 7             |
+| 2008         | 1230      | 16            |
+| 2009         | 1230      | 17            |
+| 2010         | 1230      | 11            |
+| 2011         | 990       | 8             |
+| 2012         | 1229      | 9             |
+| 2013         | 1230      | 10            |
+| 2014         | 1230      | 23            |
+| 2015         | 1230      | 11            |
+| 2016         | 1230      | 9             |
+| 2017         | 1230      | 6             |
+| 2018         | 1230      | 16            |
+| 2019         | 979       | 8             |
+| 2020         | 1160      | 12            |
+| 2021         | 1230      | 6             |
+| 2022         | 1230      | 15            |
+| 2023         | 1164      | 11            |
+| 2024         | 1225      | 10            |
+| 2025         | 1230      | 8             |
+| 2026         | 197       | 2             |
++--------------+-----------+---------------+
+
+
+
+
+
+
++-------------------------------+----------------------------------------------------+-----------------------------+
+|           col_name            |                     data_type                      |           comment           |
++-------------------------------+----------------------------------------------------+-----------------------------+
+| # col_name                    | data_type                                          | comment                     |
+|                               | NULL                                               | NULL                        |
+| game_id                       | bigint                                             |                             |
+| game_datetime                 | timestamp                                          |                             |
+| game_date                     | date                                               |                             |
+| game_type                     | string                                             |                             |
+| game_subtype                  | string                                             |                             |
+| series_game_number            | int                                                |                             |
+| home_team_id                  | bigint                                             |                             |
+| home_team_city                | string                                             |                             |
+| home_team_name                | string                                             |                             |
+| away_team_id                  | bigint                                             |                             |
+| away_team_city                | string                                             |                             |
+| away_team_name                | string                                             |                             |
+| home_score                    | int                                                |                             |
+| away_score                    | int                                                |                             |
+| winner                        | bigint                                             |                             |
+| attendance                    | int                                                |                             |
+| arena_id                      | bigint                                             |                             |
+| arena_name                    | string                                             |                             |
+| arena_city                    | string                                             |                             |
+| arena_state                   | string                                             |                             |
+| home_win                      | int                                                |                             |
+| puntos_totales                | int                                                |                             |
+| jugado                        | int                                                |                             |
+| prorroga                      | int                                                |                             |
+| marca_intercambio             | int                                                |                             |
+| marca_marcador                | int                                                |                             |
+| marca_ganador_incoherente     | int                                                |                             |
+|                               | NULL                                               | NULL                        |
+| # Partition Information       | NULL                                               | NULL                        |
+| # col_name                    | data_type                                          | comment                     |
+|                               | NULL                                               | NULL                        |
+| temporada                     | int                                                |                             |
+|                               | NULL                                               | NULL                        |
+| # Detailed Table Information  | NULL                                               | NULL                        |
+| Database:                     | nba_curated                                        | NULL                        |
+| Owner:                        | root                                               | NULL                        |
+| CreateTime:                   | Mon Nov 23 08:47:35 UTC 2026                       | NULL                        |
+| LastAccessTime:               | UNKNOWN                                            | NULL                        |
+| Retention:                    | 0                                                  | NULL                        |
+| Location:                     | hdfs://namenode:9000/nba/curated/partidos          | NULL                        |
+| Table Type:                   | EXTERNAL_TABLE                                     | NULL                        |
+| Table Parameters:             | NULL                                               | NULL                        |
+|                               | COLUMN_STATS_ACCURATE                              | {\"BASIC_STATS\":\"true\"}  |
+|                               | EXTERNAL                                           | TRUE                        |
+|                               | numFiles                                           | 81                          |
+|                               | numPartitions                                      | 81                          |
+|                               | numRows                                            | 73546                       |
+|                               | parquet.compression                                | SNAPPY                      |
+|                               | rawDataSize                                        | 1985742                     |
+|                               | totalSize                                          | 1720546                     |
+|                               | transient_lastDdlTime                              | 1795423655                  |
+|                               | NULL                                               | NULL                        |
+| # Storage Information         | NULL                                               | NULL                        |
+| SerDe Library:                | org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe | NULL                        |
+| InputFormat:                  | org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat | NULL                        |
+| OutputFormat:                 | org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat | NULL                        |
+| Compressed:                   | No                                                 | NULL                        |
+| Num Buckets:                  | -1                                                 | NULL                        |
+| Bucket Columns:               | []                                                 | NULL                        |
+| Sort Columns:                 | []                                                 | NULL                        |
+| Storage Desc Params:          | NULL                                               | NULL                        |
+|                               | serialization.format                               | 1                           |
++-------------------------------+----------------------------------------------------+-----------------------------+
+
+
++-------------------------------+----------------------------------------------------+-----------------------------+
+|           col_name            |                     data_type                      |           comment           |
++-------------------------------+----------------------------------------------------+-----------------------------+
+| # col_name                    | data_type                                          | comment                     |
+|                               | NULL                                               | NULL                        |
+| game_id                       | bigint                                             |                             |
+| team_id                       | bigint                                             |                             |
+| opponent_team_id              | bigint                                             |                             |
+| game_datetime                 | timestamp                                          |                             |
+| game_date                     | date                                               |                             |
+| game_type                     | string                                             |                             |
+| team_city                     | string                                             |                             |
+| team_name                     | string                                             |                             |
+| opponent_team_city            | string                                             |                             |
+| opponent_team_name            | string                                             |                             |
+| home                          | int                                                |                             |
+| win                           | int                                                |                             |
+| team_score                    | int                                                |                             |
+| opponent_score                | int                                                |                             |
+| plus_minus_points             | int                                                |                             |
+| num_minutes                   | double                                             |                             |
+| assists                       | int                                                |                             |
+| blocks                        | int                                                |                             |
+| steals                        | int                                                |                             |
+| turnovers                     | int                                                |                             |
+| fouls_personal                | int                                                |                             |
+| field_goals_made              | int                                                |                             |
+| field_goals_attempted         | int                                                |                             |
+| field_goals_percentage        | double                                             |                             |
+| three_pointers_made           | int                                                |                             |
+| three_pointers_attempted      | int                                                |                             |
+| three_pointers_percentage     | double                                             |                             |
+| free_throws_made              | int                                                |                             |
+| free_throws_attempted         | int                                                |                             |
+| free_throws_percentage        | double                                             |                             |
+| rebounds_offensive            | int                                                |                             |
+| rebounds_defensive            | int                                                |                             |
+| rebounds_total                | int                                                |                             |
+| q1_points                     | int                                                |                             |
+| q2_points                     | int                                                |                             |
+| q3_points                     | int                                                |                             |
+| q4_points                     | int                                                |                             |
+| ot1_points                    | int                                                |                             |
+| ot2_points                    | int                                                |                             |
+| ot_all_points                 | int                                                |                             |
+| prorroga                      | int                                                |                             |
+| bench_points                  | int                                                |                             |
+| biggest_lead                  | int                                                |                             |
+| biggest_scoring_run           | int                                                |                             |
+| lead_changes                  | int                                                |                             |
+| points_fast_break             | int                                                |                             |
+| points_from_turnovers         | int                                                |                             |
+| points_in_the_paint           | int                                                |                             |
+| points_second_chance          | int                                                |                             |
+| times_tied                    | int                                                |                             |
+| timeouts_remaining            | int                                                |                             |
+| rebounds_team                 | int                                                |                             |
+| turnovers_team                | int                                                |                             |
+| season_wins                   | int                                                |                             |
+| season_losses                 | int                                                |                             |
+| marca_fuera_rango             | int                                                |                             |
+| marca_score_recalculado       | int                                                |                             |
+| marca_score_incoherente       | int                                                |                             |
+| n_recuperados_regla           | int                                                |                             |
+| n_huecos_antes_de_imputar     | int                                                |                             |
+|                               | NULL                                               | NULL                        |
+| # Partition Information       | NULL                                               | NULL                        |
+| # col_name                    | data_type                                          | comment                     |
+|                               | NULL                                               | NULL                        |
+| temporada                     | int                                                |                             |
+|                               | NULL                                               | NULL                        |
+| # Detailed Table Information  | NULL                                               | NULL                        |
+| Database:                     | nba_curated                                        | NULL                        |
+| Owner:                        | root                                               | NULL                        |
+| CreateTime:                   | Mon Nov 23 08:46:45 UTC 2026                       | NULL                        |
+| LastAccessTime:               | UNKNOWN                                            | NULL                        |
+| Retention:                    | 0                                                  | NULL                        |
+| Location:                     | hdfs://namenode:9000/nba/curated/estadisticas_equipo | NULL                        |
+| Table Type:                   | EXTERNAL_TABLE                                     | NULL                        |
+| Table Parameters:             | NULL                                               | NULL                        |
+|                               | COLUMN_STATS_ACCURATE                              | {\"BASIC_STATS\":\"true\"}  |
+|                               | EXTERNAL                                           | TRUE                        |
+|                               | numFiles                                           | 81                          |
+|                               | numPartitions                                      | 81                          |
+|                               | numRows                                            | 147028                      |
+|                               | parquet.compression                                | SNAPPY                      |
+|                               | rawDataSize                                        | 8821680                     |
+|                               | totalSize                                          | 5978691                     |
+|                               | transient_lastDdlTime                              | 1795423605                  |
+|                               | NULL                                               | NULL                        |
+| # Storage Information         | NULL                                               | NULL                        |
+| SerDe Library:                | org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe | NULL                        |
+| InputFormat:                  | org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat | NULL                        |
+| OutputFormat:                 | org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat | NULL                        |
+| Compressed:                   | No                                                 | NULL                        |
+| Num Buckets:                  | -1                                                 | NULL                        |
+| Bucket Columns:               | []                                                 | NULL                        |
+| Sort Columns:                 | []                                                 | NULL                        |
+| Storage Desc Params:          | NULL                                               | NULL                        |
+|                               | serialization.format                               | 1                           |
++-------------------------------+----------------------------------------------------+-----------------------------+
+
+
++-------------------------------------+----------------------------------------------------+-----------------------------+
+|              col_name               |                     data_type                      |           comment           |
++-------------------------------------+----------------------------------------------------+-----------------------------+
+| # col_name                          | data_type                                          | comment                     |
+|                                     | NULL                                               | NULL                        |
+| game_id                             | bigint                                             |                             |
+| team_id                             | bigint                                             |                             |
+| game_datetime                       | timestamp                                          |                             |
+| home                                | int                                                |                             |
+| offensive_rating                    | double                                             |                             |
+| defensive_rating                    | double                                             |                             |
+| net_rating                          | double                                             |                             |
+| pace                                | double                                             |                             |
+| possessions                         | double                                             |                             |
+| effective_field_goal_percentage     | double                                             |                             |
+| true_shooting_percentage            | double                                             |                             |
+| assist_percentage                   | double                                             |                             |
+| assist_to_turnover_ratio            | double                                             |                             |
+| offensive_rebound_percentage        | double                                             |                             |
+| defensive_rebound_percentage        | double                                             |                             |
+| rebound_percentage                  | double                                             |                             |
+| team_turnover_percentage            | double                                             |                             |
+| free_throw_attempt_rate             | double                                             |                             |
+| percent_field_goal_attempts_3point  | double                                             |                             |
+| percent_points_3point               | double                                             |                             |
+| percent_points_in_paint             | double                                             |                             |
+| percent_points_fast_break           | double                                             |                             |
+| percent_points_free_throw           | double                                             |                             |
+|                                     | NULL                                               | NULL                        |
+| # Partition Information             | NULL                                               | NULL                        |
+| # col_name                          | data_type                                          | comment                     |
+|                                     | NULL                                               | NULL                        |
+| temporada                           | int                                                |                             |
+|                                     | NULL                                               | NULL                        |
+| # Detailed Table Information        | NULL                                               | NULL                        |
+| Database:                           | nba_curated                                        | NULL                        |
+| Owner:                              | root                                               | NULL                        |
+| CreateTime:                         | Mon Nov 23 08:48:26 UTC 2026                       | NULL                        |
+| LastAccessTime:                     | UNKNOWN                                            | NULL                        |
+| Retention:                          | 0                                                  | NULL                        |
+| Location:                           | hdfs://namenode:9000/nba/curated/estadisticas_avanzadas | NULL                        |
+| Table Type:                         | EXTERNAL_TABLE                                     | NULL                        |
+| Table Parameters:                   | NULL                                               | NULL                        |
+|                                     | COLUMN_STATS_ACCURATE                              | {\"BASIC_STATS\":\"true\"}  |
+|                                     | EXTERNAL                                           | TRUE                        |
+|                                     | numFiles                                           | 31                          |
+|                                     | numPartitions                                      | 31                          |
+|                                     | numRows                                            | 80260                       |
+|                                     | parquet.compression                                | SNAPPY                      |
+|                                     | rawDataSize                                        | 1845980                     |
+|                                     | totalSize                                          | 3218480                     |
+|                                     | transient_lastDdlTime                              | 1795423706                  |
+|                                     | NULL                                               | NULL                        |
+| # Storage Information               | NULL                                               | NULL                        |
+| SerDe Library:                      | org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe | NULL                        |
+| InputFormat:                        | org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat | NULL                        |
+| OutputFormat:                       | org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat | NULL                        |
+| Compressed:                         | No                                                 | NULL                        |
+| Num Buckets:                        | -1                                                 | NULL                        |
+| Bucket Columns:                     | []                                                 | NULL                        |
+| Sort Columns:                       | []                                                 | NULL                        |
+| Storage Desc Params:                | NULL                                               | NULL                        |
+|                                     | serialization.format                               | 1                           |
++-------------------------------------+----------------------------------------------------+-----------------------------+
+
+
++-----------------+
+|    partition    |
++-----------------+
+| temporada=1946  |
+| temporada=1947  |
+| temporada=1948  |
+| temporada=1949  |
+| temporada=1950  |
+| temporada=1951  |
+| temporada=1952  |
+| temporada=1953  |
+| temporada=1954  |
+| temporada=1955  |
+| temporada=1956  |
+| temporada=1957  |
+| temporada=1958  |
+| temporada=1959  |
+| temporada=1960  |
+| temporada=1961  |
+| temporada=1962  |
+| temporada=1963  |
+| temporada=1964  |
+| temporada=1965  |
+| temporada=1966  |
+| temporada=1967  |
+| temporada=1968  |
+| temporada=1969  |
+| temporada=1970  |
+| temporada=1971  |
+| temporada=1972  |
+| temporada=1973  |
+| temporada=1974  |
+| temporada=1975  |
+| temporada=1976  |
+| temporada=1977  |
+| temporada=1978  |
+| temporada=1979  |
+| temporada=1980  |
+| temporada=1981  |
+| temporada=1982  |
+| temporada=1983  |
+| temporada=1984  |
+| temporada=1985  |
+| temporada=1986  |
+| temporada=1987  |
+| temporada=1988  |
+| temporada=1989  |
+| temporada=1990  |
+| temporada=1991  |
+| temporada=1992  |
+| temporada=1993  |
+| temporada=1994  |
+| temporada=1995  |
+| temporada=1996  |
+| temporada=1997  |
+| temporada=1998  |
+| temporada=1999  |
+| temporada=2000  |
+| temporada=2001  |
+| temporada=2002  |
+| temporada=2003  |
+| temporada=2004  |
+| temporada=2005  |
+| temporada=2006  |
+| temporada=2007  |
+| temporada=2008  |
+| temporada=2009  |
+| temporada=2010  |
+| temporada=2011  |
+| temporada=2012  |
+| temporada=2013  |
+| temporada=2014  |
+| temporada=2015  |
+| temporada=2016  |
+| temporada=2017  |
+| temporada=2018  |
+| temporada=2019  |
+| temporada=2020  |
+| temporada=2021  |
+| temporada=2022  |
+| temporada=2023  |
+| temporada=2024  |
+| temporada=2025  |
+| temporada=2026  |
++-----------------+
+
+

@@ -1,0 +1,42 @@
+
+=== games ===
+Filas raw (sin repetir clave): 73544 | filas curated: 73546 | duplicados en curated: 2 | de raw que faltan en curated: 0 | de curated que no estan en raw: 0
+
+=== team_statistics ===
+Filas raw (sin repetir clave): 147106 | filas curated: 147028 | duplicados en curated: 0 | de raw que faltan en curated: 78 | de curated que no estan en raw: 0
+
+A. RECUPERACION DE LO ENSUCIADO
+          tabla      problema  celdas  recuperadas  pct_recuperado  error_medio_no_recuperadas                          nota
+          games  2_duplicados     735          NaN            0.00                         NaN 2 claves repetidas en curated
+          games     3_nombres    1425       1425.0          100.00                         NaN                              
+          games      4_fechas    3677       3677.0          100.00                         NaN                              
+          games       6_tipos    7315       7315.0          100.00                         NaN                              
+          games 7_intercambio    1766       1766.0          100.00                         NaN                              
+          games    8_marcador     368        368.0          100.00                         NaN                              
+team_statistics  2_duplicados    1471          NaN          100.00                         NaN 0 claves repetidas en curated
+team_statistics       1_nulos   75024      54391.0           72.50                      6.8162                              
+team_statistics     3_nombres    2868       2867.0           99.97                         NaN                              
+team_statistics      4_fechas    7355       7349.0           99.92                         NaN                              
+team_statistics  5_imposibles     736        703.0           95.52                      0.1002                              
+team_statistics       6_tipos   14386      14378.0           99.94                         NaN                              
+
+B. DANOS COLATERALES (celdas no ensuciadas que la limpieza ha cambiado)
+          tabla                 columna  celdas_cambiadas     de                                       ejemplos (clave, raw, curated)
+          games               homeScore                 2  69533                             [[22500652, 123, 0], [22500651, 125, 0]]
+team_statistics                 assists                 2 142012                                   [[26200259, , 2], [26200259, , 0]]
+team_statistics                  blocks                 2 141990                                   [[26200259, , 0], [26200259, , 0]]
+team_statistics                  steals                 2 142167                                   [[26200259, , 0], [26200259, , 0]]
+team_statistics     fieldGoalsAttempted                 3 142540             [[26200259, , 9], [26200259, , 0], [25900164, 240, 239]]
+team_statistics    fieldGoalsPercentage                 2 141063                             [[26200259, , 0.056], [26200259, , 0.0]]
+team_statistics  threePointersAttempted                 2 142544                                   [[26200259, , 0], [26200259, , 0]]
+team_statistics       threePointersMade                 2 142490                                   [[26200259, , 0], [26200259, , 0]]
+team_statistics threePointersPercentage                 3 140851          [[28800195, , 0.112], [26200259, , 0.0], [26200259, , 0.0]]
+team_statistics     freeThrowsAttempted                 2 142688                                  [[26200259, , 8], [26200259, , 14]]
+team_statistics    freeThrowsPercentage                 4 140951 [[26200259, , 0.152], [26200259, , 0.259], [26000051, 1.448, 0.428]]
+team_statistics       reboundsDefensive                 2 142067                                   [[26200259, , 0], [26200259, , 0]]
+team_statistics       reboundsOffensive                 2 142073                                   [[26200259, , 0], [26200259, , 0]]
+team_statistics           reboundsTotal                 2 141936                                   [[26200259, , 0], [26200259, , 0]]
+team_statistics           foulsPersonal                 2 142014                                  [[26200259, , 17], [26200259, , 3]]
+team_statistics               turnovers                 2 142059                                   [[26200259, , 0], [26200259, , 0]]
+
+Informe guardado en logs/08_verificacion_limpieza.csv

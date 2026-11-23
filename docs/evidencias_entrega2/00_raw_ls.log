@@ -1,0 +1,4 @@
+Found 3 items
+-rw-r--r--   1 root supergroup   11271951 2026-11-23 08:26 /nba/raw/fecha=2026-11-17/Games.csv
+-rw-r--r--   1 root supergroup   36160696 2026-11-23 08:29 /nba/raw/fecha=2026-11-17/TeamStatistics.csv
+-rw-r--r--   1 root supergroup   38491435 2026-11-23 08:26 /nba/raw/fecha=2026-11-17/TeamStatisticsExtended.csv

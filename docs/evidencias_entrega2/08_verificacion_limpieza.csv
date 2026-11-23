@@ -1,0 +1,13 @@
+tabla,problema,celdas,recuperadas,pct_recuperado,error_medio_no_recuperadas,nota
+games,2_duplicados,735,,0.0,,2 claves repetidas en curated
+games,3_nombres,1425,1425.0,100.0,,
+games,4_fechas,3677,3677.0,100.0,,
+games,6_tipos,7315,7315.0,100.0,,
+games,7_intercambio,1766,1766.0,100.0,,
+games,8_marcador,368,368.0,100.0,,
+team_statistics,2_duplicados,1471,,100.0,,0 claves repetidas en curated
+team_statistics,1_nulos,75024,54391.0,72.5,6.8162,
+team_statistics,3_nombres,2868,2867.0,99.97,,
+team_statistics,4_fechas,7355,7349.0,99.92,,
+team_statistics,5_imposibles,736,703.0,95.52,0.1002,
+team_statistics,6_tipos,14386,14378.0,99.94,,
