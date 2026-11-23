@@ -1,0 +1,58 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HoopMind · Visualización v1</title>
+<style>
+:root{--bg:#F8F5E4;--blue:#174D75;--ink:#21060A;--lb:#DCE7EF;--lg:#E8D9DC;--gr:#EFE9CF;--mut:#6b5a5d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Arial,sans-serif}
+header{background:var(--blue);color:#fff;padding:22px 5vw}h1{margin:0;font:700 24px Montserrat,Arial,sans-serif;letter-spacing:.5px}
+header p{margin:4px 0 0;opacity:.9}main{max-width:1100px;margin:auto;padding:20px 5vw 40px}
+section{background:#fff;border-radius:10px;padding:18px 20px;margin:18px 0;border-left:6px solid var(--blue)}
+section.ia{border-left-color:var(--ink)}h2{margin:0 0 4px;font:700 17px Montserrat,Arial,sans-serif;color:var(--blue)}section.ia h2{color:var(--ink)}
+.msg{color:var(--mut);margin:0 0 10px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
+.kpi{background:var(--lb);border-radius:8px;padding:12px}.kpi b{display:block;font-size:26px;color:var(--blue)}.kpi.g{background:var(--lg)}.kpi.g b{color:var(--ink)}
+svg{width:100%;height:auto;display:block}text{font-family:Arial,sans-serif}.note{font-size:12px;color:var(--mut)}
+label{font-size:13px;margin-right:12px}footer{padding:10px 5vw 30px;text-align:center;font-size:12px;color:var(--mut)}
+</style></head><body>
+<header><h1>HOOPMIND · Visualización v1</h1><p>Qué pasa en la NBA antes de que empiece un partido: cuatro mensajes para analistas y cuerpos técnicos</p></header>
+<main>
+<div class="grid" id="kpis"></div>
+<section><h2>1. La ventaja de jugar en casa se está reduciendo</h2><p class="msg" id="m1"></p><svg id="c1" viewBox="0 0 900 300"></svg><p class="note">Fuente: Games.csv (eoinamoore, CC0), temporada regular desde 2000-01. El año es el de inicio de la temporada; la de 2026 está incompleta.</p></section>
+<section><h2>2. Cada vez se anotan más puntos: el origen del drift</h2><p class="msg" id="m2"></p>
+<label><input type="checkbox" id="ck" checked> Marcar entrenamiento / prueba / lote 2</label><svg id="c2" viewBox="0 0 900 300"></svg><p class="note">Un modelo entrenado con los años 2000 tendría un nivel de puntos distinto al actual. Por eso el objetivo 2 se plantea relativo a la media de liga reciente.</p></section>
+<section class="ia"><h2>3. Los modelos superan a las reglas sencillas</h2><p class="msg" id="m3"></p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px"><svg id="c3" viewBox="0 0 440 280"></svg><svg id="c4" viewBox="0 0 440 280"></svg></div>
+<p class="note">Prueba = temporada 2023-24; lote 2 = 2024-25 en adelante. Referencia del objetivo 1: «gana siempre el local». Referencia del objetivo 2: media del entrenamiento.</p></section>
+<section class="ia"><h2>4. Qué mira el modelo: correlación de cada entrada con las dos salidas</h2><p class="msg" id="m4"></p><label><input type="radio" name="o" value="w" checked> Objetivo 1 (gana el local)</label><label><input type="radio" name="o" value="p"> Objetivo 2 (puntos totales)</label><svg id="c5" viewBox="0 0 900 430"></svg></section>
+</main><footer>HoopMind · Entrega 2 · Visualización v1 (HTML autónomo, sin conexión) · Aimar y Oihan</footer>
+<script>
+const D={"season": [{"t": 2000, "n": 1037, "loc": 59.699999999999996, "pts": 190.251}, {"t": 2001, "n": 1189, "loc": 59.099999999999994, "pts": 190.953}, {"t": 2002, "n": 1179, "loc": 62.6, "pts": 190.203}, {"t": 2003, "n": 1189, "loc": 61.4, "pts": 186.796}, {"t": 2004, "n": 1230, "loc": 60.4, "pts": 194.413}, {"t": 2005, "n": 1230, "loc": 60.3, "pts": 194.017}, {"t": 2006, "n": 1230, "loc": 59.099999999999994, "pts": 197.479}, {"t": 2007, "n": 1230, "loc": 60.099999999999994, "pts": 199.846}, {"t": 2008, "n": 1230, "loc": 60.8, "pts": 199.902}, {"t": 2009, "n": 1230, "loc": 59.4, "pts": 200.896}, {"t": 2010, "n": 1230, "loc": 60.4, "pts": 199.1}, {"t": 2011, "n": 990, "loc": 58.599999999999994, "pts": 192.521}, {"t": 2012, "n": 1229, "loc": 61.199999999999996, "pts": 196.276}, {"t": 2013, "n": 1230, "loc": 57.99999999999999, "pts": 202.018}, {"t": 2014, "n": 1230, "loc": 57.49999999999999, "pts": 200.028}, {"t": 2015, "n": 1230, "loc": 58.9, "pts": 205.343}, {"t": 2016, "n": 1230, "loc": 58.4, "pts": 211.181}, {"t": 2017, "n": 1230, "loc": 57.9, "pts": 212.667}, {"t": 2018, "n": 1230, "loc": 59.3, "pts": 222.417}, {"t": 2019, "n": 979, "loc": 55.1, "pts": 223.067}, {"t": 2020, "n": 1160, "loc": 54.50000000000001, "pts": 224.588}, {"t": 2021, "n": 1230, "loc": 54.400000000000006, "pts": 221.232}, {"t": 2022, "n": 1230, "loc": 57.99999999999999, "pts": 229.372}, {"t": 2023, "n": 1164, "loc": 54.0, "pts": 228.339}, {"t": 2024, "n": 1225, "loc": 54.400000000000006, "pts": 227.647}, {"t": 2025, "n": 1230, "loc": 55.400000000000006, "pts": 231.215}, {"t": 2026, "n": 197, "loc": 51.800000000000004, "pts": 227.508}], "m1": [{"m": "baseline_gana_local", "acc": 0.54, "auc": 0.5, "acc2": 0.547, "auc2": 0.5}, {"m": "boosting", "acc": 0.639, "auc": 0.7, "acc2": 0.66, "auc2": 0.717}, {"m": "regresion_logistica", "acc": 0.643, "auc": 0.704, "acc2": 0.662, "auc2": 0.722}], "m2": [{"m": "baseline_media", "mae": 26.468, "mae2": 27.236}, {"m": "boosting", "mae": 14.931, "mae2": 15.321}, {"m": "ridge", "mae": 14.827, "mae2": 15.12}], "cor": [{"v": "dif_pts_favor_ult10", "w": 0.171, "p": 0.003}, {"v": "dif_pts_contra_ult10", "w": -0.178, "p": 0.004}, {"v": "dif_win_pct_ult10", "w": 0.287, "p": 0.003}, {"v": "dif_tiro_campo_pct_ult10", "w": 0.182, "p": -0.0}, {"v": "dif_triples_pct_ult10", "w": 0.114, "p": -0.007}, {"v": "dif_libres_pct_ult10", "w": 0.054, "p": 0.008}, {"v": "dif_rebotes_ult10", "w": 0.079, "p": 0.003}, {"v": "dif_asistencias_ult10", "w": 0.119, "p": -0.003}, {"v": "dif_perdidas_ult10", "w": -0.118, "p": -0.004}, {"v": "dif_robos_ult10", "w": 0.053, "p": 0.001}, {"v": "dif_tapones_ult10", "w": 0.079, "p": -0.006}, {"v": "dif_dias_descanso", "w": 0.035, "p": -0.039}, {"v": "dif_win_pct_temporada", "w": 0.308, "p": 0.001}, {"v": "suma_pts_favor_ult10", "w": -0.027, "p": 0.629}, {"v": "suma_pts_contra_ult10", "w": -0.038, "p": 0.627}]},B="#174D75",K="#21060A",NS="http://www.w3.org/2000/svg";
+const $=i=>document.getElementById(i),fm=(x,n=1)=>x.toFixed(n).replace(".",",");
+function el(p,t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!==undefined)e.textContent=txt;p.appendChild(e);return e}
+function line(svg,key,color,lo,hi,fmtY,bands){svg.innerHTML="";const W=900,H=300,m={l:50,r:20,t:14,b:34},X=i=>m.l+i*(W-m.l-m.r)/(D.season.length-1),Y=v=>H-m.b-(v-lo)/(hi-lo)*(H-m.t-m.b);
+ if(bands){const iy=t=>D.season.findIndex(s=>s.t==t);[[0,iy(2022),"#DCE7EF","Entrenamiento"],[iy(2023),iy(2023),"#E8D9DC","Prueba"],[iy(2024),D.season.length-1,"#EFE9CF","Lote 2"]].forEach(b=>{el(svg,"rect",{x:X(b[0])-4,y:m.t,width:X(b[1])-X(b[0])+8,height:H-m.t-m.b,fill:b[2]});if(b[1]-b[0]>2||b[3]!="Prueba")el(svg,"text",{x:X(b[0]),y:m.t+12,"font-size":11,fill:"#6b5a5d"},b[3])})}
+ for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;el(svg,"line",{x1:m.l,x2:W-m.r,y1:Y(v),y2:Y(v),stroke:"#ddd"});el(svg,"text",{x:m.l-6,y:Y(v)+4,"text-anchor":"end","font-size":11,fill:"#555"},fmtY(v))}
+ D.season.forEach((s,i)=>{if(s.t%5==0)el(svg,"text",{x:X(i),y:H-12,"text-anchor":"middle","font-size":11,fill:"#555"},s.t)});
+ el(svg,"polyline",{points:D.season.map((s,i)=>X(i)+","+Y(s[key])).join(" "),fill:"none",stroke:color,"stroke-width":2.5});
+ D.season.forEach((s,i)=>{const c=el(svg,"circle",{cx:X(i),cy:Y(s[key]),r:4,fill:color});el(c,"title",{},s.t+": "+fmtY(s[key])+" ("+s.n+" partidos)")})}
+function bars(svg,items,title,fmtV,lo,hi){svg.innerHTML="";const W=440,H=280,bw=60,gap=(W-40-items.length*bw*2)/(items.length+1);el(svg,"text",{x:0,y:16,"font-size":13,"font-weight":700,fill:K},title);
+ const Y=v=>H-40-(v-lo)/(hi-lo)*(H-80);let x=20+gap;
+ items.forEach(it=>{[["Prueba",it.a,B],["Lote 2",it.b,"#8FB0C8"]].forEach((p,j)=>{const xx=x+j*bw;if(p[1]==null)return;el(svg,"rect",{x:xx,y:Y(p[1]),width:bw-6,height:Y(lo)-Y(p[1]),fill:p[2]});el(svg,"text",{x:xx+(bw-6)/2,y:Y(p[1])-4,"text-anchor":"middle","font-size":11,fill:K},fmtV(p[1]))});
+  const t=el(svg,"text",{x:x+bw-3,y:H-22,"text-anchor":"middle","font-size":11,fill:"#333"});it.n.split("\n").forEach((ln,k)=>el(t,"tspan",{x:x+bw-3,dy:k?13:0},ln));x+=2*bw+gap});
+ el(svg,"line",{x1:20,x2:W-10,y1:Y(lo),y2:Y(lo),stroke:"#999"})}
+const nm1={baseline_gana_local:"Referencia\n(gana local)",regresion_logistica:"Regresión\nlogística",boosting:"Boosting"},nm2={baseline_media:"Referencia\n(media)",ridge:"Ridge",boosting:"Boosting"};
+const s=D.season,first=s[0],last=s[s.length-2],lg=D.m1.find(r=>r.m=="regresion_logistica"),b1=D.m1.find(r=>r.m.startsWith("baseline")),r2=D.m2.find(r=>r.m=="ridge"),b2=D.m2.find(r=>r.m.startsWith("baseline"));
+$("kpis").innerHTML=[["b",fm(first.loc)+"% → "+fm(last.loc)+"%","Victorias locales, "+first.t+" → "+last.t,""],["b",fm(first.pts,0)+" → "+fm(last.pts,0),"Puntos totales por partido, "+first.t+" → "+last.t,""],["b",fm(lg.acc*100)+"% vs "+fm(b1.acc*100)+"%","Acierto del ganador: modelo frente a «gana el local»","g"],["b",fm(r2.mae)+" vs "+fm(b2.mae),"Error medio en puntos: Ridge frente a la media","g"]].map(k=>`<div class="kpi ${k[3]}"><b>${k[0]=="b"?k[1]:""}</b>${k[2]}</div>`).join("");
+$("m1").textContent="Gana el local el "+fm(first.loc)+" % de los partidos en "+first.t+" y el "+fm(last.loc)+" % en "+last.t+". Un modelo no debe memorizar el 60 % histórico.";
+$("m2").textContent="Los partidos pasan de unos "+fm(first.pts,0)+" puntos de media en "+first.t+" a "+fm(last.pts,0)+" en "+last.t+".";
+$("m3").textContent="Con la información previa al partido el ganador se acierta en un "+fm(lg.acc*100)+" % (referencia "+fm(b1.acc*100)+" %) y el error en puntos baja de "+fm(b2.mae)+" a "+fm(r2.mae)+".";
+$("c3").dataset.t=1;
+function draw(){line($("c1"),"loc",B,48,66,v=>fm(v,0)+"%",false);line($("c2"),"pts",K,180,240,v=>fm(v,0),$("ck").checked);
+ bars($("c3"),D.m1.map(r=>({n:nm1[r.m],a:r.acc*100,b:r.acc2*100})),"Objetivo 1 · acierto del ganador (%)",v=>fm(v),40,75);
+ bars($("c4"),D.m2.map(r=>({n:nm2[r.m],a:r.mae,b:r.mae2})),"Objetivo 2 · error medio en puntos (menos es mejor)",v=>fm(v),0,30);
+ const k=document.querySelector("input[name=o]:checked").value,svg=$("c5");svg.innerHTML="";const rows=[...D.cor].sort((a,b)=>Math.abs(b[k])-Math.abs(a[k])),cx=580,sc=380;
+ $("m4").textContent=k=="w"?"Para saber quién gana pesan sobre todo el % de victorias de la temporada y de los últimos 10 partidos.":"Para los puntos totales mandan las sumas de puntos a favor y en contra; las diferencias entre equipos casi no cuentan.";
+ el(svg,"line",{x1:cx,x2:cx,y1:6,y2:424,stroke:"#999"});
+ rows.forEach((r,i)=>{const y=10+i*26,w=Math.abs(r[k])*sc*(k=="w"?1.4:0.7)*(k=="w"?1:1);el(svg,"text",{x:300,y:y+14,"text-anchor":"end","font-size":11,fill:"#333"},r.v);
+  el(svg,"rect",{x:r[k]>=0?cx:cx-w,y:y,width:Math.max(w,1),height:18,fill:r[k]>=0?B:"#8a3b4a"});
+  el(svg,"text",{x:r[k]>=0?cx+w+5:cx-w-5,y:y+13,"text-anchor":r[k]>=0?"start":"end","font-size":11,fill:K},fm(r[k],2))})}
+$("ck").onchange=draw;document.querySelectorAll("input[name=o]").forEach(i=>i.onchange=draw);draw();
+</script></body></html>
