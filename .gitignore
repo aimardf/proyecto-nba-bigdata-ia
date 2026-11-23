@@ -5,3 +5,5 @@ __pycache__/
 mlruns/
 !data/.gitkeep
 !logs/.gitkeep
+mlflow.db
+mlartifacts/

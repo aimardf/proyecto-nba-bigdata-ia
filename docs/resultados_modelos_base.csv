@@ -1,0 +1,7 @@
+experimento,modelo,prueba_logloss,lote2_logloss,lote2_prob_media_local,prueba_prob_media_local,prueba_auc,lote2_accuracy,prueba_accuracy,lote2_tasa_real_local,lote2_auc,prueba_tasa_real_local,prueba_rmse,lote2_r2,lote2_media_predicha,prueba_media_real,prueba_mae,prueba_r2,prueba_media_predicha,lote2_media_real,lote2_mae,lote2_rmse
+hoopmind_obj1_home_win,baseline_gana_local,0.695,0.693,0.589,0.589,0.5,0.547,0.54,0.547,0.5,0.54,,,,,,,,,,
+hoopmind_obj1_home_win,boosting,0.627,0.616,0.564,0.566,0.7,0.66,0.639,0.547,0.717,0.54,,,,,,,,,,
+hoopmind_obj1_home_win,regresion_logistica,0.626,0.611,0.567,0.566,0.704,0.662,0.643,0.547,0.722,0.54,,,,,,,,,,
+hoopmind_obj2_puntos_totales,baseline_media,,,,,,,,,,,31.851,-1.657,203.708,228.339,26.468,-1.488,203.708,229.292,27.236,32.399
+hoopmind_obj2_puntos_totales,boosting,,,,,,,,,,,18.773,0.063,227.724,228.339,14.931,0.136,227.345,229.292,15.321,19.245
+hoopmind_obj2_puntos_totales,ridge,,,,,,,,,,,18.531,0.091,230.013,228.339,14.827,0.158,229.609,229.292,15.12,18.954

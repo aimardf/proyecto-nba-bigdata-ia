@@ -1,0 +1,6 @@
+variante,n_entradas,auc_logistica,auc_boosting,mae_ridge,mae_boosting
+A_todas_48,48,0.7114,0.706,14.7823,14.9072
+B_sin_ventana5,40,0.7122,0.709,14.7928,15.0035
+C_B_sin_back2back_ni_victorias,36,0.7039,0.7031,14.7713,15.0172
+D_solo_diferencias_sin_sumas,13,0.7039,0.7032,26.3954,25.7469
+E_FINAL_diferencias_y_sumas,15,0.7042,0.7,14.8265,14.9314
