@@ -71,4 +71,4 @@ Cómo leerlo:
 - Registrar en MLflow cada reentreno (experimento `hoopmind_obj2_drift`).
 
 ## Ficheros
-`scripts/drift_y_tiempo.py` (todo el análisis) · `docs/drift/*.csv` y `drift_objetivo2.png` · MLflow: `sqlite:///mlflow.db`, experimento `hoopmind_obj2_drift` (16 runs).
+`scripts/drift_y_tiempo.py` (todo el análisis) · `docs/drift/*.csv` y `drift_objetivo2.png` · MLflow: `sqlite:///mlflow.db`, experimento `hoopmind_obj2_drift` (16 estrategias + estrés + resumen).
