@@ -1,0 +1,3 @@
+Tabla de modelado: 31,218 partidos x 22 columnas (5 identificación + 15 entradas + 2 salidas)
+Filas Python: 31218 | Hive: 31218 | solo en uno de los dos: 0
+Máxima diferencia Hive vs Python: 1.04e-13 -> OK
