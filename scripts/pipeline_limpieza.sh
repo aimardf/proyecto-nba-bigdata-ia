@@ -17,6 +17,7 @@ export MSYS_NO_PATHCONV=1          # Git Bash en Windows: no tocar las rutas /nb
 
 FECHA=${1:-2026-11-17}
 SEED=${2:-42}
+DESDE=${DESDE:-0}                 # DESDE=7 salta los pasos 0-6 (ya hechos) y sigue en el 7
 PY=${PY:-python3}                  # en Windows puede ser: PY=python ./scripts/...
 TEMPORADA_MUESTRA=${TEMPORADA_MUESTRA:-2024}
 
@@ -31,6 +32,7 @@ paso() { echo; echo "=================== $* ==================="; }
 hdfs() { docker exec namenode hdfs dfs "$@"; }
 mkdir -p logs "$LOCAL_RAW" "$LOCAL_DIRTY" "$EXPORT" hive/generado
 
+if [ "$DESDE" -lt 7 ]; then
 paso "0. Contenedores"
 for c in namenode datanode hive-metastore hive-server; do
   docker ps --format '{{.Names}}' | grep -qx "$c" || { echo "Falta el contenedor $c. Levanta el entorno: cd hadoop && docker compose up -d"; exit 1; }
@@ -86,13 +88,15 @@ paso "6. Comprobaciones y DESCRIBE FORMATTED"
 "${BEELINE[@]}" --outputformat=table -f "$HQL_DIR/03_comprobaciones.hql" 2>&1 | tee logs/06_comprobaciones_hive.log
 hdfs -du -h /nba/curated | tee logs/06_hdfs_curated_du.log
 
-paso "7. Exportar curated a CSV para la verificacion"
+fi   # fin de los pasos 0-6
+
+paso "7. Exportar curated a CSV (copiando los Parquet de HDFS, sin SELECT * por Hive)"
+rm -rf data/curated_parquet && mkdir -p data/curated_parquet
 for t in partidos estadisticas_equipo; do
-  "${BEELINE[@]}" --outputformat=csv2 --showHeader=true \
-      --hiveconf hive.resultset.use.unique.column.names=false \
-      -e "SELECT * FROM nba_curated.$t" 2>/dev/null > "$EXPORT/$t.csv"
-  echo "$t: $(($(wc -l < "$EXPORT/$t.csv") - 1)) filas"
+  docker exec namenode bash -c "rm -rf /tmp/cur_$t && hdfs dfs -get /nba/curated/$t /tmp/cur_$t"
+  docker cp "namenode:/tmp/cur_$t" "data/curated_parquet/$t"
 done
+"$PY" scripts/exportar_curated.py --origen data/curated_parquet --destino "$EXPORT" partidos estadisticas_equipo
 
 paso "8. ¿Recupera la limpieza los valores originales?"
 "$PY" scripts/verificar_limpieza.py --raw "$LOCAL_RAW" --log "$LOCAL_DIRTY/ensuciado_log.csv" \
@@ -114,11 +118,12 @@ for t in partidos estadisticas_equipo; do
 done
 
 paso "10. Tabla de modelado compacta (04_modelado.hql) y comprobacion contra Python"
+docker exec hive-server bash -c "mkdir -p $HQL_DIR" && docker cp hive/. "hive-server:$HQL_DIR/"
 "${BEELINE[@]}" -f "$HQL_DIR/04_modelado.hql" 2>&1 | tee logs/10_hive_modelado.log
 hdfs -du -h /nba/curated/modelado_partidos | tee logs/10_hdfs_modelado_du.log
-"${BEELINE[@]}" --outputformat=csv2 --showHeader=true \
-    --hiveconf hive.resultset.use.unique.column.names=false \
-    -e "SELECT * FROM nba_curated.modelado_partidos" 2>/dev/null > "$EXPORT/modelado_partidos.csv"
+docker exec namenode bash -c "rm -rf /tmp/cur_modelado_partidos && hdfs dfs -get /nba/curated/modelado_partidos /tmp/cur_modelado_partidos"
+docker cp "namenode:/tmp/cur_modelado_partidos" "data/curated_parquet/modelado_partidos"
+"$PY" scripts/exportar_curated.py --origen data/curated_parquet --destino "$EXPORT" modelado_partidos
 "$PY" scripts/construir_modelado.py --curated "$EXPORT" --salida data/modelado_partidos.parquet | tee logs/10_modelado_python.log
 "$PY" scripts/construir_modelado.py --curated "$EXPORT" --hive "$EXPORT/modelado_partidos.csv" | tee logs/10_comparacion_hive_python.log
 

@@ -39,6 +39,7 @@ Qué hace:
 8. `parquet-tools inspect` sobre un fichero real (`pip install parquet-tools`).
 
 Todas las evidencias quedan en `logs/` (un `.log` por paso).
+Si se corta a partir del paso 7 (los pasos 0-6 ya hechos), se sigue con `DESDE=7 PY=python ./scripts/pipeline_limpieza.sh 2026-11-17 42`. La exportación de curated copia los Parquet de HDFS y los lee con Python (`scripts/exportar_curated.py`): un `SELECT *` por beeline con Hive local se cuelga con 150.000 filas.
 
 ## Tabla de modelado compacta y modelos base (23/11)
 ```bash
