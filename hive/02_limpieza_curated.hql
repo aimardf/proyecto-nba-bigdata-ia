@@ -34,6 +34,11 @@ SET hive.exec.dynamic.partition.mode = nonstrict;
 SET hive.exec.max.dynamic.partitions = 1000;
 SET hive.exec.max.dynamic.partitions.pernode = 1000;
 SET parquet.compression = SNAPPY;
+-- Evita "OutOfMemoryError: Java heap space" al escribir muchas particiones (una por temporada):
+-- ordena por particion para tener UN solo escritor Parquet abierto a la vez y usa grupos de filas mas pequenos.
+SET hive.optimize.sort.dynamic.partition = true;
+SET parquet.block.size = 33554432;
+SET parquet.page.size = 1048576;
 
 CREATE DATABASE IF NOT EXISTS nba_work;
 CREATE DATABASE IF NOT EXISTS nba_curated;
