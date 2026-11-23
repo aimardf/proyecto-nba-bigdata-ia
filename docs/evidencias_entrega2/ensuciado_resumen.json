@@ -1,0 +1,44 @@
+{
+  "semilla": 42,
+  "fecha_ejecucion": "2026-11-23T09:44:41",
+  "tasas": {
+    "nulos": 0.03,
+    "duplicados": 0.01,
+    "nombres": 0.02,
+    "fechas": 0.05,
+    "imposibles": 0.005,
+    "tipos": 0.1,
+    "intercambio": 0.003,
+    "marcador": 0.005
+  },
+  "columnas_quitadas_minimizacion": {
+    "games": [
+      "officials"
+    ],
+    "team_statistics": [
+      "coachId"
+    ]
+  },
+  "filas_originales": {
+    "games": 73544,
+    "team_statistics": 147106
+  },
+  "filas_ensuciadas": {
+    "games": 74279,
+    "team_statistics": 148577
+  },
+  "cambios": {
+    "games/2_duplicados": 735,
+    "games/3_nombres": 1425,
+    "games/4_fechas": 3677,
+    "games/6_tipos": 7315,
+    "games/7_intercambio": 1766,
+    "games/8_marcador": 368,
+    "team_statistics/1_nulos": 75024,
+    "team_statistics/2_duplicados": 1471,
+    "team_statistics/3_nombres": 2868,
+    "team_statistics/4_fechas": 7355,
+    "team_statistics/5_imposibles": 736,
+    "team_statistics/6_tipos": 14386
+  }
+}

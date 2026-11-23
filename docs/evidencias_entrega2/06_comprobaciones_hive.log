@@ -1,0 +1,171 @@
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/opt/hive/lib/log4j-slf4j-impl-2.6.2.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/opt/hadoop-2.7.4/share/hadoop/common/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.apache.logging.slf4j.Log4jLoggerFactory]
+ 
+
+
+
+ 
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
++----------------------------------------------------+----------+
+|                       f.paso                       | f.filas  |
++----------------------------------------------------+----------+
+| 1 games / dirty                                    | 74279    |
+| 2 games / sin duplicados                           | 73544    |
+| 3 games / curated.partidos                         | 73546    |
+| 4 team_statistics / dirty                          | 148577   |
+| 5 team_statistics / sin duplicados                 | 147106   |
+| 6 team_statistics / curated.estadisticas_equipo    | 147028   |
+| 7 team_statistics_ext / raw                        | 80342    |
+| 8 team_statistics_ext / curated.estadisticas_avanzadas | 80260    |
++----------------------------------------------------+----------+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+ 
++----------------------+-----------------------+
+|      _u1.tabla       | _u1.claves_repetidas  |
++----------------------+-----------------------+
+| estadisticas_equipo  | 0                     |
+| partidos             | 2                     |
++----------------------+-----------------------+
+
+
+
+
+
+
+
+
+
+
++------------------+----------------+
+|    _u1.tabla     | _u1.sin_fecha  |
++------------------+----------------+
+| team_statistics  | 78             |
+| games            | 0              |
++------------------+----------------+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
++-----------+---------------+
+| partidos  | no_coinciden  |
++-----------+---------------+
+| 73546     | 164           |
++-----------+---------------+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
++-----------------------------+------------------------+----------------------+----------+------------+
+| local_visitante_corregidos  | marcadores_corregidos  | ganador_incoherente  | jugados  | sin_jugar  |
++-----------------------------+------------------------+----------------------+----------+------------+
+| 221                         | 370                    | 0                    | 73542    | 4          |
++-----------------------------+------------------------+----------------------+----------+------------+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
++-----------------------------------+----------------------+--------------------------------------+-------------------------------+--------------------------+
+| filas_con_valores_fuera_de_rango  | puntos_recalculados  | puntos_distintos_de_suma_de_cuartos  | datos_recuperados_con_reglas  | huecos_antes_de_imputar  |
++-----------------------------------+----------------------+--------------------------------------+-------------------------------+--------------------------+
+| 752                               | 356                  | 207                                  | 45361                         | 30075                    |
++-----------------------------------+----------------------+--------------------------------------+-------------------------------+--------------------------+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

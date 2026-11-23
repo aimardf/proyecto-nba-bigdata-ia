@@ -1,0 +1,17 @@
+Semilla 42. Filas: Games 73544 -> 74279, TeamStatistics 147106 -> 148577
+Columnas quitadas por minimizacion: {'games': ['officials'], 'team_statistics': ['coachId']}
+Cambios por tabla y problema:
+tabla            problema     
+games            2_duplicados       735
+                 3_nombres         1425
+                 4_fechas          3677
+                 6_tipos           7315
+                 7_intercambio     1766
+                 8_marcador         368
+team_statistics  1_nulos          75024
+                 2_duplicados      1471
+                 3_nombres         2868
+                 4_fechas          7355
+                 5_imposibles       736
+                 6_tipos          14386
+Total: 117126 cambios. Log en data\dirty\ensuciado_log.csv
