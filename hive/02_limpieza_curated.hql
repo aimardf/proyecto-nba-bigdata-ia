@@ -145,6 +145,7 @@ SELECT * FROM (
   FROM nba_dirty.team_statistics
 ) p
 WHERE game_id IS NOT NULL AND team_id IS NOT NULL
+  AND team_id > 0   -- la fuente trae 2 filas fantasma con teamId = 0 (partidos 22500651 y 22500652): duplicaban esos partidos al unirse
 ) t
 WHERE rn = 1;
 
