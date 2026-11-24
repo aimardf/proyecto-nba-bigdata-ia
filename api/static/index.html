@@ -41,6 +41,18 @@ button.pri2{background:var(--azul);color:#fff;padding:9px 16px;margin-right:8px}
 .rebota{animation:bote .5s ease-in-out infinite alternate}
 @keyframes bote{from{transform:translateY(0)}to{transform:translateY(-7px)}}
 
+/* forma reciente */
+#forma{margin-top:18px;background:#fff;border-radius:14px;padding:14px 18px;border:1px solid var(--azul-cl)}
+#forma h2{margin:0 0 2px;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--azul)}
+#forma .sub{font-size:12px;color:#5a4a4d;margin:0 0 10px}
+.fila{display:grid;grid-template-columns:1fr 1.5fr 1fr;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--crema2);font-size:14px}
+.fila.cab{border-top:0;font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:13px}
+.fila .v{font-family:Montserrat,Arial,sans-serif;font-weight:500;text-align:center;padding:3px 0;border-radius:6px}
+.fila .e{text-align:center;font-size:12px;letter-spacing:.5px;color:#5a4a4d;text-transform:uppercase}
+.fila .v.mej{background:var(--azul-cl);font-weight:800;color:var(--azul)}
+.fila.cab .c1{color:var(--azul);text-align:center}.fila.cab .c2{color:var(--granate-eq);text-align:center}
+.camiseta.con-logo{background:var(--crema)!important}.camiseta img{width:70%;height:70%;object-fit:contain}
+
 /* marcador */
 #marcador{margin-top:18px;display:none;background:var(--granate);color:var(--crema);border-radius:14px;padding:18px 20px;border-bottom:6px solid var(--balon)}
 #marcador.ver{display:block;animation:entra .35s ease-out}
@@ -113,6 +125,12 @@ label.m input{width:110px;padding:4px}
   </div>
 </section>
 
+<section id="forma" style="display:none" aria-label="Forma reciente de los dos equipos">
+  <h2>Forma de los últimos 10 partidos</h2>
+  <p class="sub">Medias de cada equipo en sus 10 últimos partidos de temporada regular. En azul, el mejor de los dos en cada estadística.</p>
+  <div id="forma-filas"></div>
+</section>
+
 <div id="error" class="error" style="display:none"></div>
 
 <section id="marcador" aria-live="polite">
@@ -143,10 +161,28 @@ const $=id=>document.getElementById(id);
 function errTxt(j){return j.detail&&j.detail.map?j.detail.map(x=>x.loc.slice(-1)+': '+x.msg).join('\n'):j.detail;}
 function sigla(n){const p=(n||'').trim().split(/\s+/);return (p[p.length-1]||'').slice(0,3).toUpperCase();}
 function verError(t){const e=$('error');e.textContent=t;e.style.display=t?'block':'none';}
-function camisetas(){$('cam-l').textContent=sigla($('local').selectedOptions[0]?.text)||'LOC';$('cam-v').textContent=sigla($('visitante').selectedOptions[0]?.text)||'VIS';}
+let EQ={};
+const ESTAD=[['pts_favor_ult10','Puntos a favor',1,1],['pts_contra_ult10','Puntos en contra',1,-1],['win_pct_ult10','% victorias (últimos 10)',2,1],
+ ['win_pct_temporada','% victorias (temporada)',2,1],['tiro_campo_pct_ult10','% tiro de campo',2,1],['triples_pct_ult10','% triples',2,1],
+ ['libres_pct_ult10','% tiros libres',2,1],['rebotes_ult10','Rebotes',1,1],['asistencias_ult10','Asistencias',1,1],
+ ['perdidas_ult10','Pérdidas',1,-1],['robos_ult10','Robos',1,1],['tapones_ult10','Tapones',1,1]];
+function fmt(v,t){if(v==null)return '—';return t===2?(v*100).toFixed(1)+' %':v.toFixed(1);}
+function forma(){
+  const a=EQ[$('local').value],b=EQ[$('visitante').value];if(!a||!b){$('forma').style.display='none';return;}
+  let h=`<div class="fila cab"><div class="c1">${a.nombre}</div><div></div><div class="c2">${b.nombre}</div></div>`;
+  for(const [k,n,t,dir] of ESTAD){const x=a.forma[k],y=b.forma[k];
+    const ma=x!=null&&y!=null&&x!==y&&(x-y)*dir>0,mb=x!=null&&y!=null&&x!==y&&(y-x)*dir>0;
+    h+=`<div class="fila"><div class="v ${ma?'mej':''}">${fmt(x,t)}</div><div class="e">${n}</div><div class="v ${mb?'mej':''}">${fmt(y,t)}</div></div>`;}
+  $('forma-filas').innerHTML=h;$('forma').style.display='block';
+}
+function escudo(el,id,sig){el.textContent=sig;el.classList.remove('con-logo');
+  const im=new Image();im.alt='';im.onload=()=>{el.textContent='';el.appendChild(im);el.classList.add('con-logo');};im.src='/static/logos/'+id+'.png';}
+function camisetas(){escudo($('cam-l'),$('local').value,sigla($('local').selectedOptions[0]?.text)||'LOC');
+  escudo($('cam-v'),$('visitante').value,sigla($('visitante').selectedOptions[0]?.text)||'VIS');forma();}
 
 fetch('/equipos').then(r=>r.json().then(j=>({ok:r.ok,j}))).then(({ok,j})=>{
   if(!ok){$('datos').textContent='No hay estado de equipos: '+errTxt(j);return;}
+  j.equipos.forEach(e=>EQ[e.id]=e);
   const op=j.equipos.map(e=>`<option value="${e.id}">${e.nombre}</option>`).join('');
   $('local').innerHTML=op;$('visitante').innerHTML=op;$('visitante').selectedIndex=Math.min(1,j.equipos.length-1);
   $('datos').innerHTML=`Datos hasta el <b>${j.datos_hasta}</b> (temporada ${j.temporada}) · media de la liga reciente: <b>${j.media_liga_reciente}</b> puntos por partido`;

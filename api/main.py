@@ -155,7 +155,10 @@ def _limpio(d):
 def equipos():
     est = _estado()
     return {"datos_hasta": est["fecha_corte"], "temporada": est["temporada"], "media_liga_reciente": est["media_liga_reciente"],
-            "equipos": [{"id": x["id"], "nombre": x["nombre"]} for x in est["equipos"]]}
+            "equipos": [{"id": x["id"], "nombre": x["nombre"], "ultimo_partido": x["ultimo_partido"],
+                         "partidos_temporada": x["partidos_temporada"],
+                         "forma": {k: v for k, v in x.items() if k.endswith("_ult10") or k == "win_pct_temporada"}}
+                        for x in est["equipos"]]}
 
 
 @app.post("/predict/partido")
