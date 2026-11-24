@@ -29,6 +29,7 @@ import mlflow
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
+from modelo_ganador import guardar_modelo_ganador
 from modelo_puntos import CLIP, VENT_LIGA, ModeloPuntosRelativo, guardar_modelo, media_liga_reciente
 from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.ensemble import HistGradientBoostingClassifier as HGBC, HistGradientBoostingRegressor as HGBR
@@ -110,6 +111,10 @@ def main():
                                     f"{tag}_logloss": log_loss(y[mask], np.clip(p, 1e-6, 1 - 1e-6)),
                                     f"{tag}_prob_media_local": float(p.mean()), f"{tag}_tasa_real_local": float(y[mask].mean())})
             mlflow.sklearn.log_model(m, name="modelo", serialization_format="cloudpickle")
+            if nombre == "regresion_logistica":
+                # El elegido para la API (el mejor en AUC): archivo con el modelo y la lista de columnas de entrada
+                ruta = guardar_modelo_ganador(m, X, f"{a.modelos}/modelo_ganador.joblib", nombre)
+                mlflow.log_artifact(ruta)
 
     # ---------------- Objetivo 2: puntos_totales (a prueba de drift) ----------------
     # Los *_absoluto son el diseño antiguo (solo para comparar). Los *_relativo son el modelo bueno:
