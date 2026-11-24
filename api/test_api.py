@@ -95,6 +95,7 @@ def test_equipos_y_partido(cliente):
     c, main = cliente
     eq = c.get("/equipos").json()
     assert len(eq["equipos"]) == 8 and eq["datos_hasta"]
+    assert "pts_favor_ult10" in eq["equipos"][0]["forma"] and "win_pct_temporada" in eq["equipos"][0]["forma"]
     r = c.post("/predict/partido", json={"local_id": 1, "visitante_id": 2})
     assert r.status_code == 200
     j = r.json()
