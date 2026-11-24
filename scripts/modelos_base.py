@@ -11,7 +11,9 @@ Cortes por fecha (no se mezclan filas al azar):
 El corte es orientativo (el plan lo deja pendiente): se cambia con --fin-train y --prueba.
 
 Objetivo 1 (clasificación): home_win       -> baseline "gana siempre el local", regresión logística, boosting
-Objetivo 2 (regresión):     puntos_totales -> baseline "la media",              Ridge,               boosting
+Objetivo 2 (regresión):     puntos_totales -> baseline "la media", Ridge y boosting RELATIVOS a la media de liga
+                            (arreglo del drift: sin año, se predice puntos - media_liga y se vuelve a sumar, tope 127-319;
+                            los modelos *_absoluto se conservan solo para comparar). Ver scripts/modelo_puntos.py
 
 Uso:
   python3 scripts/modelos_base.py --tabla data/modelado_partidos.parquet
@@ -27,6 +29,7 @@ import mlflow
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
+from modelo_puntos import CLIP, VENT_LIGA, ModeloPuntosRelativo, guardar_modelo, media_liga_reciente
 from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.ensemble import HistGradientBoostingClassifier as HGBC, HistGradientBoostingRegressor as HGBR
 from sklearn.impute import SimpleImputer
@@ -75,10 +78,12 @@ def main():
     ap.add_argument("--prueba", type=int, default=2023)
     ap.add_argument("--mlflow", default="sqlite:///mlflow.db")
     ap.add_argument("--eda", default="docs/eda")
+    ap.add_argument("--modelos", default="models", help="carpeta donde se guarda modelo_puntos.joblib para la API")
     a = ap.parse_args()
 
-    ds = pd.read_parquet(a.tabla)
+    ds = pd.read_parquet(a.tabla).sort_values(["game_date", "game_id"]).reset_index(drop=True)
     X = [c for c in ds.columns if c not in IDENT + SALIDAS]
+    ds["ref_liga"] = media_liga_reciente(ds)      # media de los 600 partidos anteriores (no es entrada; se suma al predecir)
     tr = ds.temporada <= a.fin_train
     te = ds.temporada == a.prueba
     l2 = ds.temporada > a.prueba
@@ -106,23 +111,44 @@ def main():
                                     f"{tag}_prob_media_local": float(p.mean()), f"{tag}_tasa_real_local": float(y[mask].mean())})
             mlflow.sklearn.log_model(m, name="modelo", serialization_format="cloudpickle")
 
-    # ---------------- Objetivo 2: puntos_totales ----------------
+    # ---------------- Objetivo 2: puntos_totales (a prueba de drift) ----------------
+    # Los *_absoluto son el diseño antiguo (solo para comparar). Los *_relativo son el modelo bueno:
+    # sin año, objetivo = puntos - media de liga reciente, se vuelve a sumar al predecir y se acota a CLIP.
+    # Detalle y explicación: scripts/modelo_puntos.py y docs/drift/EXPLICACION_DRIFT.md
     mlflow.set_experiment("hoopmind_obj2_puntos_totales")
     y = ds.puntos_totales
-    modelos = {"baseline_media": DummyRegressor(strategy="mean"),
-               "ridge": pre(Ridge(alpha=10)),
-               "boosting": HGBR(max_iter=200, learning_rate=.05, random_state=0)}
-    for nombre, m in modelos.items():
-        m.fit(ds.loc[tr, X], y[tr])
+    ref = ds.ref_liga.values
+    modelos = {"baseline_media": ("abs", DummyRegressor(strategy="mean")),
+               "ridge_absoluto": ("abs", pre(Ridge(alpha=10))),
+               "boosting_absoluto": ("abs", HGBR(max_iter=200, learning_rate=.05, random_state=0)),
+               "ridge_relativo": ("rel", ModeloPuntosRelativo("ridge")),
+               "boosting_relativo": ("rel", ModeloPuntosRelativo("boosting"))}
+    for nombre, (modo, m) in modelos.items():
+        if modo == "rel":
+            m.fit(ds.loc[tr, X], y[tr], ref[tr])
+        else:
+            m.fit(ds.loc[tr, X], y[tr])
         with mlflow.start_run(run_name=nombre):
-            mlflow.log_params({"n_entradas": len(X), "entrena_hasta": a.fin_train, "prueba": a.prueba})
+            mlflow.log_params({"n_entradas": len(X), "entrena_hasta": a.fin_train, "prueba": a.prueba,
+                               "usa_anio": False, "objetivo_relativo": modo == "rel",
+                               "ventana_liga_partidos": VENT_LIGA if modo == "rel" else None,
+                               "clip": str(CLIP) if modo == "rel" else None})
             for tag, mask in [("prueba", te), ("lote2", l2)]:
-                p = m.predict(ds.loc[mask, X])
+                p = m.predict(ds.loc[mask, X], ref[mask]) if modo == "rel" else m.predict(ds.loc[mask, X])
                 mlflow.log_metrics({f"{tag}_mae": mean_absolute_error(y[mask], p),
                                     f"{tag}_rmse": float(np.sqrt(mean_squared_error(y[mask], p))),
                                     f"{tag}_r2": r2_score(y[mask], p),
+                                    f"{tag}_sesgo": float(np.mean(p - y[mask])),
                                     f"{tag}_media_predicha": float(p.mean()), f"{tag}_media_real": float(y[mask].mean())})
-            mlflow.sklearn.log_model(m, name="modelo", serialization_format="cloudpickle")
+            if modo == "rel":
+                # Modelo para la API: fichero .joblib (se carga con modelo_puntos.cargar_modelo) + copia en MLflow
+                ruta = guardar_modelo(m, f"{a.modelos}/modelo_puntos_{nombre}.joblib")
+                mlflow.log_artifact(ruta)
+                if nombre == "ridge_relativo":
+                    guardar_modelo(m, f"{a.modelos}/modelo_puntos.joblib")   # el elegido (más simple, extrapola bien)
+                    mlflow.log_artifact(f"{a.modelos}/modelo_puntos.joblib")
+            else:
+                mlflow.sklearn.log_model(m, name="modelo", serialization_format="cloudpickle")
 
     # Resumen legible
     filas = []
