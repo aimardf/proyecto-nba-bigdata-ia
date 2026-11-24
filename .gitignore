@@ -7,3 +7,4 @@ mlruns/
 !logs/.gitkeep
 mlflow.db
 mlartifacts/
+models/
