@@ -68,7 +68,9 @@ def cargar_curated(carpeta):
     return g, e
 
 
-def construir(g, e):
+def largo_equipos(g, e):
+    """Una fila por equipo y partido (solo temporada regular, desde 2000 y jugados), con sus puntos y estadísticas.
+    Lo usan construir() y estado_equipos.py. Devuelve (partidos filtrados, tabla larga ordenada por equipo y fecha)."""
     g = g[(g.game_type == "Regular Season") & (g.temporada >= 2000) & (g.jugado == 1)]
     g = g.sort_values(["game_date", "game_id"]).reset_index(drop=True)
 
@@ -82,7 +84,11 @@ def construir(g, e):
     largo["gana"] = (largo.pts_favor > largo.pts_contra).astype(int)
     largo = largo.merge(e.rename(columns={"team_id": "equipo", **STATS}), on=["game_id", "equipo"], how="left") \
                  .sort_values(["equipo", "game_date", "game_id"]).reset_index(drop=True)
+    return g, largo
 
+
+def construir(g, e):
+    g, largo = largo_equipos(g, e)
     grp = largo.groupby("equipo", group_keys=False)
     fuentes = {"pts_favor": "pts_favor", "pts_contra": "pts_contra", "win_pct": "gana",
                **{v: v for v in STATS.values()}}

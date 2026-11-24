@@ -5,37 +5,71 @@
 :root{--azul:#174D75;--granate:#21060A;--crema:#F8F5E4}
 body{font-family:system-ui,sans-serif;background:var(--crema);color:var(--granate);margin:0;padding:16px}
 main{max-width:860px;margin:auto}
-h1{color:var(--azul)}
+h1{color:var(--azul);margin-bottom:4px}
 fieldset{border:1px solid var(--azul);border-radius:8px;margin-bottom:14px;padding:10px 14px}
 legend{color:var(--azul);font-weight:600}
-label{display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:14px}
-input{width:110px}
+label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:6px 0;font-size:14px}
+input,select{width:230px;padding:4px}
+input[type=number]{width:110px}
 button{background:var(--azul);color:#fff;border:0;border-radius:6px;padding:10px 16px;margin-right:8px;cursor:pointer}
 button.sec{background:#fff;color:var(--azul);border:1px solid var(--azul)}
-#res{margin-top:16px;padding:12px;background:#fff;border-radius:8px;border-left:5px solid var(--azul);white-space:pre-wrap}
-.nota{font-size:13px}
+.res{margin-top:12px;padding:12px;background:#fff;border-radius:8px;border-left:5px solid var(--azul);white-space:pre-wrap}
+.nota{font-size:13px;color:#555}
+details{margin-top:18px}summary{cursor:pointer;color:var(--azul);font-weight:600}
 </style></head><body><main>
 <h1>HoopMind · Predicción de un partido</h1>
-<p class="nota">Escribe las 15 entradas del partido (diferencias local − visitante de los últimos 10 partidos) y pulsa un botón. Los porcentajes van de 0 a 1.</p>
+<p class="nota" id="datos">Cargando equipos…</p>
+
+<fieldset><legend>Elige los dos equipos</legend>
+<label>Local <select id="local"></select></label>
+<label>Visitante <select id="visitante"></select></label>
+<label>Días de descanso del local <input id="dl" type="number" min="0" max="7" step="1" value="2"></label>
+<label>Días de descanso del visitante <input id="dv" type="number" min="0" max="7" step="1" value="2"></label>
+<button type="button" onclick="partido()">Predecir partido</button>
+<div class="res" id="resp">El resultado aparecerá aquí.</div>
+<p class="nota">La forma de cada equipo son sus últimos 10 partidos y su % de victorias de la temporada, hasta la fecha de los datos.</p>
+</fieldset>
+
+<details><summary>Modo manual: escribir las 15 entradas</summary>
+<p class="nota">Diferencias local − visitante de los últimos 10 partidos; los porcentajes van de 0 a 1.</p>
 <form id="f"><fieldset><legend>Entradas</legend><div id="campos"></div></fieldset>
 <fieldset><legend>Solo para puntos totales</legend>
 <label>Media de puntos de la liga (últimos 600 partidos) <input name="media_liga_reciente" type="number" step="any" value="229.3"></label></fieldset>
 <button type="button" onclick="pred('ganador')">¿Quién gana?</button>
 <button type="button" onclick="pred('puntos')">¿Cuántos puntos?</button>
 <button type="button" class="sec" onclick="ejemplo()">Rellenar un ejemplo</button></form>
-<div id="res">El resultado aparecerá aquí.</div>
+<div class="res" id="res">El resultado aparecerá aquí.</div></details>
+
 <script>
-const campos=document.getElementById('campos'); let cols=[];
+const $=id=>document.getElementById(id);
+function errTxt(j){return j.detail&&j.detail.map?j.detail.map(x=>x.loc.slice(-1)+': '+x.msg).join('\n'):j.detail;}
+fetch('/equipos').then(r=>r.json().then(j=>({ok:r.ok,j}))).then(({ok,j})=>{
+  if(!ok){$('datos').textContent='No hay estado de equipos: '+errTxt(j);return;}
+  const op=j.equipos.map(e=>`<option value="${e.id}">${e.nombre}</option>`).join('');
+  $('local').innerHTML=op;$('visitante').innerHTML=op;$('visitante').selectedIndex=Math.min(1,j.equipos.length-1);
+  $('datos').textContent=`Datos hasta el ${j.datos_hasta} (temporada ${j.temporada}). Media de liga reciente: ${j.media_liga_reciente} puntos.`;
+}).catch(e=>{$('datos').textContent='No se pudo conectar con la API: '+e;});
+
+async function partido(){const r=$('resp');r.textContent='Calculando…';
+ try{const resp=await fetch('/predict/partido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+   local_id:parseInt($('local').value),visitante_id:parseInt($('visitante').value),
+   dias_descanso_local:parseFloat($('dl').value),dias_descanso_visitante:parseFloat($('dv').value)})});
+  const j=await resp.json(); if(!resp.ok){r.textContent='Error: '+errTxt(j);return;}
+  const g=j.ganador, nombre=g.ganador==='local'?j.local:j.visitante, pr=g.ganador==='local'?g.prob_local:g.prob_visitante;
+  r.textContent=`${j.local} (local) contra ${j.visitante}\n\nGanador previsto: ${nombre} (${(pr*100).toFixed(1)} %)\nPuntos totales previstos: ${j.puntos.puntos_totales}\n\nDatos hasta ${j.datos_hasta}`;
+ }catch(e){r.textContent='No se pudo conectar con la API: '+e;}}
+
+let cols=[];
 fetch('/contrato').then(r=>r.json()).then(c=>{cols=c.entradas;
- campos.innerHTML=cols.map(n=>`<label>${n} <input name="${n}" type="number" step="any" value="0"></label>`).join('');});
-function datos(){const o={};new FormData(document.getElementById('f')).forEach((v,k)=>o[k]=parseFloat(v));return o;}
+ $('campos').innerHTML=cols.map(n=>`<label>${n} <input name="${n}" type="number" step="any" value="0"></label>`).join('');});
+function datos(){const o={};new FormData($('f')).forEach((v,k)=>o[k]=parseFloat(v));return o;}
 function ejemplo(){const ej={dif_pts_favor_ult10:4,dif_pts_contra_ult10:-3,dif_win_pct_ult10:.3,dif_win_pct_temporada:.2,suma_pts_favor_ult10:228,suma_pts_contra_ult10:226};
  for(const k in ej){const i=document.querySelector(`[name=${k}]`); if(i) i.value=ej[k];}}
-async function pred(t){const r=document.getElementById('res'); r.textContent='Calculando…';
+async function pred(t){const r=$('res'); r.textContent='Calculando…';
  try{const d=datos(); if(t==='ganador') delete d.media_liga_reciente;
   const resp=await fetch('/predict/'+t,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
   const j=await resp.json();
-  if(!resp.ok){r.textContent='Error: '+(j.detail&&j.detail.map?j.detail.map(x=>x.loc.slice(-1)+': '+x.msg).join('\n'):j.detail);return;}
+  if(!resp.ok){r.textContent='Error: '+errTxt(j);return;}
   r.textContent=t==='ganador'?`Gana el ${j.ganador}\nProbabilidad del local: ${(j.prob_local*100).toFixed(1)} %\nProbabilidad del visitante: ${(j.prob_visitante*100).toFixed(1)} %`
    :`Puntos totales previstos: ${j.puntos_totales}\n(media de liga usada: ${j.media_liga_usada}; rango permitido ${j.rango_permitido[0]}–${j.rango_permitido[1]})`;
  }catch(e){r.textContent='No se pudo conectar con la API: '+e;}}

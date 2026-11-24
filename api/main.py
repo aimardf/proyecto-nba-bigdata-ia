@@ -3,6 +3,8 @@
 Dos modelos, dos endpoints:
   POST /predict/ganador  -> probabilidad de que gane el local (modelo models/modelo_ganador.joblib)
   POST /predict/puntos   -> puntos totales del partido (modelo models/modelo_puntos.joblib, relativo a la liga)
+  GET  /equipos          -> equipos disponibles y fecha de los datos (models/estado_equipos.json)
+  POST /predict/partido  -> elige local y visitante: la API calcula las 15 entradas y predice ganador y puntos
   GET  /health           -> comprueba que la API y los modelos están listos
   GET  /                 -> página sencilla para probar a mano
   GET  /docs             -> pantalla de pruebas automática de FastAPI
@@ -13,6 +15,8 @@ Arrancar (desde la raíz del repo):
   pip install -r api/requirements.txt
   uvicorn api.main:app --reload
 """
+import json
+import math
 import os
 import pathlib
 import sys
@@ -98,20 +102,84 @@ def contrato():
     return {"entradas": COLUMNAS, "media_liga_por_defecto": LIGA_POR_DEFECTO}
 
 
-@app.post("/predict/ganador")
-def predecir_ganador(e: Entradas):
+def _pred_ganador(df):
     g = _cargar("ganador", "modelo_ganador.joblib", cargar_modelo_ganador)
-    p = float(g["modelo"].predict_proba(_fila(e)[g["columnas"]])[:, 1][0])
+    p = float(g["modelo"].predict_proba(df[g["columnas"]])[:, 1][0])
     return {"prob_local": round(p, 4), "prob_visitante": round(1 - p, 4),
             "ganador": "local" if p >= .5 else "visitante", "modelo": g["nombre"]}
 
 
+def _pred_puntos(df, ref):
+    m = _cargar("puntos", "modelo_puntos.joblib", cargar_modelo)
+    p = float(m.predict(df, ref)[0])
+    return {"puntos_totales": round(p, 1), "media_liga_usada": ref, "rango_permitido": list(CLIP), "modelo": m.tipo + "_relativo"}
+
+
+@app.post("/predict/ganador")
+def predecir_ganador(e: Entradas):
+    return _pred_ganador(_fila(e))
+
+
 @app.post("/predict/puntos")
 def predecir_puntos(e: EntradasPuntos):
-    m = _cargar("puntos", "modelo_puntos.joblib", cargar_modelo)
-    ref = e.media_liga_reciente
-    p = float(m.predict(_fila(e), ref)[0])
-    return {"puntos_totales": round(p, 1), "media_liga_usada": ref, "rango_permitido": list(CLIP), "modelo": m.tipo + "_relativo"}
+    return _pred_puntos(_fila(e), e.media_liga_reciente)
+
+
+# ---------- Elegir dos equipos ----------
+def _estado():
+    ruta = _ruta("estado_equipos.json")
+    if "estado" not in _cache:
+        if not ruta.exists():
+            raise HTTPException(503, f"Falta {ruta}. Genera el estado de los equipos con: python scripts/estado_equipos.py --curated data/curated_export")
+        _cache["estado"] = json.loads(ruta.read_text(encoding="utf-8"))
+    return _cache["estado"]
+
+
+class Partido(BaseModel):
+    local_id: int = Field(..., description="id del equipo local (ver /equipos)")
+    visitante_id: int = Field(..., description="id del equipo visitante (ver /equipos)")
+    dias_descanso_local: float = Field(2, ge=0, le=7, description="Días desde su último partido (tope 7)")
+    dias_descanso_visitante: float = Field(2, ge=0, le=7, description="Días desde su último partido (tope 7)")
+
+
+def _v(x):
+    return float("nan") if x is None else x
+
+
+def _limpio(d):
+    return {k: (None if isinstance(v, float) and math.isnan(v) else round(v, 4)) for k, v in d.items()}
+
+
+@app.get("/equipos")
+def equipos():
+    est = _estado()
+    return {"datos_hasta": est["fecha_corte"], "temporada": est["temporada"], "media_liga_reciente": est["media_liga_reciente"],
+            "equipos": [{"id": x["id"], "nombre": x["nombre"]} for x in est["equipos"]]}
+
+
+@app.post("/predict/partido")
+def predecir_partido(p: Partido):
+    est = _estado()
+    por_id = {x["id"]: x for x in est["equipos"]}
+    if p.local_id == p.visitante_id:
+        raise HTTPException(422, "El local y el visitante tienen que ser equipos distintos")
+    for i in (p.local_id, p.visitante_id):
+        if i not in por_id:
+            raise HTTPException(404, f"Equipo {i} no encontrado; consulta /equipos")
+    lo, vi = por_id[p.local_id], por_id[p.visitante_id]
+    ent = {}
+    for col in COLUMNAS:
+        if col.startswith("dif_") and col.endswith("_ult10"):
+            ent[col] = _v(lo.get(col[4:])) - _v(vi.get(col[4:]))
+        elif col.startswith("suma_"):
+            ent[col] = _v(lo.get(col[5:])) + _v(vi.get(col[5:]))
+    ent["dif_dias_descanso"] = p.dias_descanso_local - p.dias_descanso_visitante
+    ent["dif_win_pct_temporada"] = _v(lo["win_pct_temporada"]) - _v(vi["win_pct_temporada"])
+    import pandas as pd
+    df = pd.DataFrame([ent])[COLUMNAS]
+    ref = est["media_liga_reciente"]
+    return {"local": lo["nombre"], "visitante": vi["nombre"], "datos_hasta": est["fecha_corte"],
+            "entradas": _limpio(ent), "ganador": _pred_ganador(df), "puntos": _pred_puntos(df, ref)}
 
 
 @app.get("/", include_in_schema=False)
