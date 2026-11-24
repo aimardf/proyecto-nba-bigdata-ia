@@ -23,6 +23,7 @@ import sys
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
@@ -180,6 +181,9 @@ def predecir_partido(p: Partido):
     ref = est["media_liga_reciente"]
     return {"local": lo["nombre"], "visitante": vi["nombre"], "datos_hasta": est["fecha_corte"],
             "entradas": _limpio(ent), "ganador": _pred_ganador(df), "puntos": _pred_puntos(df, ref)}
+
+
+app.mount("/static", StaticFiles(directory=RAIZ / "api" / "static"), name="static")
 
 
 @app.get("/", include_in_schema=False)
