@@ -1,0 +1,9 @@
+experimento,modelo,accuracy_mean,accuracy_std,auc_mean,auc_std,mae_mean,mae_std,rmse_mean,rmse_std,sesgo_mean,sesgo_std
+hoopmind_obj1_home_win,baseline_gana_local,0.586,0.018,0.5,0.0,,,,,,
+hoopmind_obj1_home_win,boosting,0.651,0.017,0.687,0.019,,,,,,
+hoopmind_obj1_home_win,regresion_logistica,0.657,0.017,0.697,0.02,,,,,,
+hoopmind_obj2_puntos_totales,baseline_media,,,,,19.624,4.821,24.518,5.18,-12.061,9.089
+hoopmind_obj2_puntos_totales,boosting_absoluto,,,,,14.964,0.408,18.977,0.477,0.121,0.816
+hoopmind_obj2_puntos_totales,boosting_relativo,,,,,14.793,0.321,18.79,0.381,-0.138,0.183
+hoopmind_obj2_puntos_totales,ridge_absoluto,,,,,14.744,0.366,18.667,0.414,1.208,0.513
+hoopmind_obj2_puntos_totales,ridge_relativo,,,,,14.669,0.344,18.624,0.399,-0.021,0.105
