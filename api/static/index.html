@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HoopMind · Predicción</title>
+<style>
+:root{--azul:#174D75;--granate:#21060A;--crema:#F8F5E4}
+body{font-family:system-ui,sans-serif;background:var(--crema);color:var(--granate);margin:0;padding:16px}
+main{max-width:860px;margin:auto}
+h1{color:var(--azul)}
+fieldset{border:1px solid var(--azul);border-radius:8px;margin-bottom:14px;padding:10px 14px}
+legend{color:var(--azul);font-weight:600}
+label{display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:14px}
+input{width:110px}
+button{background:var(--azul);color:#fff;border:0;border-radius:6px;padding:10px 16px;margin-right:8px;cursor:pointer}
+button.sec{background:#fff;color:var(--azul);border:1px solid var(--azul)}
+#res{margin-top:16px;padding:12px;background:#fff;border-radius:8px;border-left:5px solid var(--azul);white-space:pre-wrap}
+.nota{font-size:13px}
+</style></head><body><main>
+<h1>HoopMind · Predicción de un partido</h1>
+<p class="nota">Escribe las 15 entradas del partido (diferencias local − visitante de los últimos 10 partidos) y pulsa un botón. Los porcentajes van de 0 a 1.</p>
+<form id="f"><fieldset><legend>Entradas</legend><div id="campos"></div></fieldset>
+<fieldset><legend>Solo para puntos totales</legend>
+<label>Media de puntos de la liga (últimos 600 partidos) <input name="media_liga_reciente" type="number" step="any" value="229.3"></label></fieldset>
+<button type="button" onclick="pred('ganador')">¿Quién gana?</button>
+<button type="button" onclick="pred('puntos')">¿Cuántos puntos?</button>
+<button type="button" class="sec" onclick="ejemplo()">Rellenar un ejemplo</button></form>
+<div id="res">El resultado aparecerá aquí.</div>
+<script>
+const campos=document.getElementById('campos'); let cols=[];
+fetch('/contrato').then(r=>r.json()).then(c=>{cols=c.entradas;
+ campos.innerHTML=cols.map(n=>`<label>${n} <input name="${n}" type="number" step="any" value="0"></label>`).join('');});
+function datos(){const o={};new FormData(document.getElementById('f')).forEach((v,k)=>o[k]=parseFloat(v));return o;}
+function ejemplo(){const ej={dif_pts_favor_ult10:4,dif_pts_contra_ult10:-3,dif_win_pct_ult10:.3,dif_win_pct_temporada:.2,suma_pts_favor_ult10:228,suma_pts_contra_ult10:226};
+ for(const k in ej){const i=document.querySelector(`[name=${k}]`); if(i) i.value=ej[k];}}
+async function pred(t){const r=document.getElementById('res'); r.textContent='Calculando…';
+ try{const d=datos(); if(t==='ganador') delete d.media_liga_reciente;
+  const resp=await fetch('/predict/'+t,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  const j=await resp.json();
+  if(!resp.ok){r.textContent='Error: '+(j.detail&&j.detail.map?j.detail.map(x=>x.loc.slice(-1)+': '+x.msg).join('\n'):j.detail);return;}
+  r.textContent=t==='ganador'?`Gana el ${j.ganador}\nProbabilidad del local: ${(j.prob_local*100).toFixed(1)} %\nProbabilidad del visitante: ${(j.prob_visitante*100).toFixed(1)} %`
+   :`Puntos totales previstos: ${j.puntos_totales}\n(media de liga usada: ${j.media_liga_usada}; rango permitido ${j.rango_permitido[0]}–${j.rango_permitido[1]})`;
+ }catch(e){r.textContent='No se pudo conectar con la API: '+e;}}
+</script></main></body></html>
