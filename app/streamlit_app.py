@@ -81,7 +81,7 @@ if seccion.startswith("1"):
         st.dataframe(vista.head(500), width="stretch")
         st.caption(f"Se muestran las primeras 500 filas de {len(vista):,}.".replace(",", "."))
         with st.expander("Resumen estadístico"):
-            st.dataframe(vista.describe().T, width="stretch")
+            st.dataframe(vista.select_dtypes("number").describe().T, width="stretch")
     else:
         st.info("Sin el parquet no puedo mostrar los partidos. Genéralo con scripts/construir_modelado.py.")
         st.dataframe(leer_csv(DOCS / "eda" / "resumen_por_temporada.csv"), width="stretch")
