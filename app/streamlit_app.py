@@ -105,7 +105,7 @@ elif seccion.startswith("2"):
         st.dataframe(d, width="stretch")
     mostrar(px.bar(d, x="temporada", y=["PSI_objetivo_vs_train", "PSI_objetivo_relativo"],
                    barmode="group", color_discrete_sequence=PALETA,
-                   title="PSI del objetivo: absoluto (naranja) vs relativo a la liga (azul)"))
+                   title="PSI del objetivo: absoluto (azul) vs relativo a la liga (naranja)"))
     st.caption("PSI > 0,25 = cambio grande. El objetivo absoluto se dispara; el relativo se mantiene estable.")
 
 # ---------------------------------------------------------------- 3. Entradas
@@ -143,6 +143,8 @@ elif seccion.startswith("4"):
 elif seccion.startswith("5"):
     st.header("Resultados de los modelos")
     r = leer_csv(DOCS / "resultados_modelos_base.csv")
+    # El CSV puede traer filas de validación cruzada (cv_...) o repetidas: nos quedamos con una fila por modelo.
+    r = r[~r.modelo.str.startswith("cv_")].drop_duplicates(["experimento", "modelo"], keep="last")
     st.subheader("Objetivo 1 · ¿Gana el local?")
     o1 = r[r.experimento.str.contains("obj1")][["modelo", "prueba_accuracy", "lote2_accuracy", "prueba_auc", "lote2_auc"]]
     st.dataframe(o1.set_index("modelo"), width="stretch")
@@ -162,7 +164,9 @@ elif seccion.startswith("5"):
     ob = st.radio("Objetivo", ["Ganador (accuracy)", "Puntos (MAE)"], horizontal=True)
     y = "accuracy" if ob.startswith("Ganador") else "mae"
     sub = m[m.experimento.str.contains("obj1" if y == "accuracy" else "obj2")]
-    mostrar(px.line(sub, x="corte", y=y, color="modelo", markers=True, color_discrete_sequence=[AZUL, NARANJA, "#6B1F2B"]))
+    fig = px.line(sub, x="corte", y=y, color="modelo", markers=True, color_discrete_sequence=[AZUL, NARANJA, "#6B1F2B", "#7FA6C4", "#F0B27A"])
+    fig.update_xaxes(dtick=1)
+    mostrar(fig)
     img = DOCS / "validacion_temporal" / "relativo_vs_absoluto_por_corte.png"
     if img.exists():
         st.image(str(img), caption="Predecir lo relativo a la liga vs lo absoluto, por corte temporal")
