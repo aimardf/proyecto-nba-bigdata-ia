@@ -205,7 +205,7 @@ class PartidoFecha(BaseModel):
     local_id: int = Field(..., description="id del equipo local (ver /equipos)")
     visitante_id: int = Field(..., description="id del equipo visitante (ver /equipos)")
     fecha: datetime.date = Field(..., description="Fecha del partido (AAAA-MM-DD). Pasada: se usan sus 10 partidos anteriores a esa fecha. Futura: se usa el estado más reciente.")
-    con_tendencia: bool = Field(True, description="Solo fechas futuras: si es true, sube el nivel de puntos de la liga siguiendo la tendencia de los últimos años")
+    con_tendencia: bool = Field(True, description="Solo fechas futuras: si es true, sube el nivel de puntos de la liga (+20 en 20 años, frenándose)")
 
 
 def _historial():
@@ -218,8 +218,9 @@ def _historial():
     return _cache["historial"]
 
 
-ANOS_TENDENCIA = 10    # temporadas completas usadas para medir cuánto sube la liga por año
-MAX_ANOS_EXTRAPOLAR = 10   # más allá, el nivel de puntos se queda fijo (no inventamos siglos de tendencia)
+SUBIDA_TOTAL = 20.0       # puntos totales que sube la liga en MAX_ANOS_EXTRAPOLAR años (decisión de Aimar)
+MAX_ANOS_EXTRAPOLAR = 20  # más allá, el nivel de puntos se queda fijo
+TAU = 12.5                # años de la curva; con 12,5 la subida empieza en ~+2 puntos/año (lo medido) y se va frenando
 
 
 def _serie():
@@ -230,11 +231,10 @@ def _serie():
         return [{"temporada": int(r["temporada"]), "media": float(r["media_puntos"]), "partidos": int(r["partidos"])} for r in csv.DictReader(f)]
 
 
-def _pendiente():
-    """Puntos totales que sube la liga por año: recta (mínimos cuadrados) sobre las últimas 10 temporadas casi completas."""
-    import numpy as np
-    t = [x for x in _serie() if x["partidos"] >= 900][-ANOS_TENDENCIA:]
-    return float(np.polyfit([x["temporada"] for x in t], [x["media"] for x in t], 1)[0]) if len(t) >= 3 else 0.0
+def _subida(anos):
+    """Puntos que sube la liga a los 'anos' años: empieza a ~+2 por año y se frena (curva de saturación), +20 a los 20 años."""
+    anos = min(max(anos, 0.0), MAX_ANOS_EXTRAPOLAR)
+    return SUBIDA_TOTAL * (1 - math.exp(-anos / TAU)) / (1 - math.exp(-MAX_ANOS_EXTRAPOLAR / TAU))
 
 
 @app.post("/predict/fecha")
@@ -266,13 +266,12 @@ def predecir_fecha(p: PartidoFecha):
         if p.con_tendencia:
             # La liga cada vez anota más: sumamos a la media de liga (y a las dos sumas de puntos de las entradas, que son
             # absolutas) lo que subiría según la tendencia reciente. Así el modelo ve la misma situación "relativa" que ya conoce.
-            anos = min(max((fecha - corte).days / 365.25, 0), MAX_ANOS_EXTRAPOLAR)
-            sube = _pendiente()
-            ajuste = round(sube * anos, 1)
+            anos = max((fecha - corte).days / 365.25, 0)
+            ajuste = round(_subida(anos), 1)
             ref = round(ref + ajuste, 2)
-            tendencia = {"puntos_por_ano": round(sube, 2), "anos_aplicados": round(anos, 1), "ajuste": ajuste}
-            aviso += (f" Se aplica la tendencia de la liga (+{tendencia['puntos_por_ano']} puntos por año en las últimas {ANOS_TENDENCIA} temporadas), "
-                      f"que suma {ajuste} puntos al nivel actual" + (f"; más allá de {MAX_ANOS_EXTRAPOLAR} años la tendencia se detiene." if (fecha - corte).days / 365.25 > MAX_ANOS_EXTRAPOLAR else "."))
+            tendencia = {"ajuste": ajuste, "anos": round(anos, 1), "subida_total": SUBIDA_TOTAL, "anos_tope": MAX_ANOS_EXTRAPOLAR}
+            aviso += (f" Se aplica la tendencia de la liga: sube el nivel de puntos {ajuste} (la subida se va frenando y llega a +{SUBIDA_TOTAL:g} "
+                      f"a los {MAX_ANOS_EXTRAPOLAR} años, donde se detiene).")
     else:
         h = _historial()
         lo, vi = forma_hasta(h, p.local_id, fecha), forma_hasta(h, p.visitante_id, fecha)

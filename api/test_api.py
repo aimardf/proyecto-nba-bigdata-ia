@@ -186,8 +186,13 @@ def test_futuro_con_y_sin_tendencia(cliente):
     base = {"local_id": 1, "visitante_id": 2, "fecha": "2036-01-15"}
     con = c.post("/predict/fecha", json=base).json()
     sin = c.post("/predict/fecha", json={**base, "con_tendencia": False}).json()
-    assert sin["tendencia"] is None and con["tendencia"]["puntos_por_ano"] > 0
+    assert sin["tendencia"] is None and 0 < con["tendencia"]["ajuste"] < 20
     assert con["puntos"]["media_liga_usada"] > sin["puntos"]["media_liga_usada"]      # la liga "sube"
-    assert con["puntos"]["puntos_totales"] >= sin["puntos"]["puntos_totales"]
     lejos = c.post("/predict/fecha", json={**base, "fecha": "2061-01-15"}).json()
-    assert lejos["tendencia"]["anos_aplicados"] == 10.0                                  # tope de extrapolación
+    assert lejos["tendencia"]["ajuste"] == 20.0                                          # +20 en 20 años y se detiene
+
+
+def test_subida_se_frena():
+    from api.main import _subida
+    assert abs(_subida(1) - 2.0) < 0.2 and _subida(20) == 20.0 and _subida(50) == 20.0
+    assert _subida(10) - _subida(9) > _subida(20) - _subida(19)                          # cada año sube menos
