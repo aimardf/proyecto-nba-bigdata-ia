@@ -1,0 +1,7 @@
+# Tema claro de HoopMind (azul y naranja). Streamlit lo lee al arrancar desde la raíz del repo.
+[theme]
+base = "light"
+primaryColor = "#D9702B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F8F5E4"
+textColor = "#21060A"
