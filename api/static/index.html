@@ -209,9 +209,9 @@ label.m input{width:110px;padding:4px;grid-row:1;grid-column:2}
 </section>
 
 <details id="forma" style="display:none" aria-label="Forma reciente de los dos equipos">
-  <summary>Forma de los últimos 10 partidos <small>pulsa para desplegar</small></summary>
+  <summary><span id="forma-titulo">Forma de los últimos 10 partidos</span> <small>pulsa para desplegar</small></summary>
   <div class="cuerpo">
-  <p class="sub">Medias de cada equipo en sus 10 últimos partidos de temporada regular. En azul, el mejor de los dos en cada estadística.</p>
+  <p class="sub">Medias de cada equipo en sus 10 partidos de temporada regular anteriores a la fecha elegida (sin fecha, los más recientes). En azul, el mejor de los dos en cada estadística.</p>
   <div id="forma-filas"></div>
   </div>
 </details>
@@ -245,8 +245,15 @@ const ESTAD=[['pts_favor_ult10','Puntos a favor',1,1],['pts_contra_ult10','Punto
  ['libres_pct_ult10','% tiros libres',2,1],['rebotes_ult10','Rebotes',1,1],['asistencias_ult10','Asistencias',1,1],
  ['perdidas_ult10','Pérdidas',1,-1],['robos_ult10','Robos',1,1],['tapones_ult10','Tapones',1,1]];
 function fmt(v,t){if(v==null)return '—';return t===2?(v*100).toFixed(1)+' %':v.toFixed(1);}
+let FORMA_FECHA=null;   /* forma devuelta por /predict/fecha para la combinación (equipos+fecha) ya predicha */
 function forma(){
-  const a=EQ[$('local').value],b=EQ[$('visitante').value];if(!a||!b){$('forma').style.display='none';return;}
+  let a=EQ[$('local').value],b=EQ[$('visitante').value];if(!a||!b){$('forma').style.display='none';return;}
+  const f=$('fecha').value;let ttl='Forma de los últimos 10 partidos';
+  if(f){ /* con fecha: solo se enseña la forma de ESA fecha, calculada por la API al predecir */
+    if(!FORMA_FECHA||FORMA_FECHA.clave!==$('local').value+'|'+$('visitante').value+'|'+f){$('forma').style.display='none';return;}
+    a={nombre:a.nombre,forma:FORMA_FECHA.local};b={nombre:b.nombre,forma:FORMA_FECHA.visitante};
+    ttl=FORMA_FECHA.modo==='pasado'?'Forma en los 10 partidos anteriores al '+f:'Forma más reciente conocida (estimación para el '+f+')';}
+  $('forma-titulo').textContent=ttl;
   let i=0;let h=`<div class="fila cab"><div class="c1">${a.nombre}</div><div></div><div class="c2">${b.nombre}</div></div>`;
   for(const [k,n,t,dir] of ESTAD){const x=a.forma[k],y=b.forma[k];
     const ma=x!=null&&y!=null&&x!==y&&(x-y)*dir>0,mb=x!=null&&y!=null&&x!==y&&(y-x)*dir>0;
@@ -283,7 +290,7 @@ fetch('/equipos').then(r=>r.json().then(j=>({ok:r.ok,j}))).then(({ok,j})=>{
 $('local').addEventListener('change',camisetas);$('visitante').addEventListener('change',camisetas);
 
 /* ---- fecha del partido ---- */
-function fechaCambia(){const f=$('fecha').value;$('dl').disabled=$('dv').disabled=!!f;
+function fechaCambia(){forma();const f=$('fecha').value;$('dl').disabled=$('dv').disabled=!!f;
   $('dl').title=$('dv').title=f?'Con fecha, el descanso se calcula solo':'';}
 $('fecha').addEventListener('change',fechaCambia);
 let SERIE=null;
@@ -335,6 +342,8 @@ async function partido(){
     $('m-gan').innerHTML=`<span class="corona">🏆</span>Favorito: <b>${gana?j.local:j.visitante}</b> ${gana?'(en casa)':'(a domicilio)'}`;
     cuenta($('m-pts'),Math.round(j.puntos.puntos_totales),'',1100);$('m-fecha').textContent=(j.fecha?j.fecha+' · ':'')+'datos hasta '+j.datos_hasta;
     resultado(j);
+    if(j.forma){FORMA_FECHA={clave:$('local').value+'|'+$('visitante').value+'|'+$('fecha').value,modo:j.modo,local:j.forma.local,visitante:j.forma.visitante};}else FORMA_FECHA=null;
+    forma();
     const m=$('marcador');m.classList.remove('ver');void m.offsetWidth;m.classList.add('ver');
     $('b-local').style.width='50%';$('b-visit').style.width='50%';
     setTimeout(()=>{$('b-local').style.width=pl+'%';$('b-visit').style.width=pv+'%';},60);

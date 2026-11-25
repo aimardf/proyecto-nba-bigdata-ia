@@ -195,6 +195,11 @@ def _entradas(lo, vi, dias_local, dias_visit):
     return ent
 
 
+def _solo_forma(f):
+    """Las estadísticas de forma de un equipo (las que enseña la web), sin ids ni fechas."""
+    return {k: v for k, v in f.items() if k.endswith("_ult10") or k == "win_pct_temporada"}
+
+
 def _df(ent):
     import pandas as pd
     return pd.DataFrame([ent])[COLUMNAS]
@@ -301,6 +306,7 @@ def predecir_fecha(p: PartidoFecha):
         real["error_puntos"] = round(puntos["puntos_totales"] - real["puntos_totales"], 1)
     return {"local": nombres[p.local_id], "visitante": nombres[p.visitante_id], "fecha": str(p.fecha), "modo": "futuro" if futuro else "pasado",
             "datos_hasta": datos_hasta, "temporada": temporada, "aviso": aviso, "real": real, "tendencia": tendencia,
+            "forma": {"local": _solo_forma(lo), "visitante": _solo_forma(vi)},
             "dias_descanso": {"local": lo["dias_descanso"], "visitante": vi["dias_descanso"]},
             "entradas": _limpio(ent), "ganador": ganador, "puntos": puntos}
 
