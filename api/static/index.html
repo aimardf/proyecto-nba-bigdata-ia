@@ -30,7 +30,7 @@ header p{margin:3px 0 0;font-size:12px;letter-spacing:4px;text-transform:upperca
 @keyframes brillo{0%{background-position:150% 0}60%,100%{background-position:-50% 0}}
 .duelo{position:relative;z-index:1;display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:start}
 .eq{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
-.eq .etq{font-size:11px;letter-spacing:3px;text-transform:uppercase;opacity:.85}
+.eq .etq{font-size:11px;line-height:14px;letter-spacing:3px;text-transform:uppercase;opacity:.85}
 .camiseta{--h:210;width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font-family:Montserrat,Arial,sans-serif;font-weight:800;font-size:28px;letter-spacing:1px;color:var(--crema);--c1:hsl(var(--h) 55% 34%);--c2:var(--crema);--tx:var(--crema);color:var(--tx);background:linear-gradient(145deg,var(--c1),color-mix(in srgb,var(--c1) 62%,#000));border:4px solid var(--c2);box-shadow:inset 0 0 0 5px rgba(248,245,228,.18),0 8px 18px -6px rgba(0,0,0,.5);transition:transform .3s cubic-bezier(.3,1.6,.5,1),background .3s}
 .camiseta.cambia{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
 @keyframes pop{0%{transform:scale(.7) rotate(-10deg)}100%{transform:none}}
@@ -38,7 +38,7 @@ header p{margin:3px 0 0;font-size:12px;letter-spacing:4px;text-transform:upperca
 .eq select:hover{box-shadow:0 0 0 3px rgba(217,112,43,.55)}
 .descanso{display:flex;align-items:center;gap:8px;font-size:12px}
 .descanso input{width:56px;padding:6px;border-radius:8px;border:2px solid var(--crema);background:var(--crema);color:var(--granate);text-align:center;font-weight:700}
-.vs{align-self:center;margin-top:26px;width:58px;height:58px;border-radius:50%;background:linear-gradient(145deg,#ee8a45,var(--balon));color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;border:3px solid var(--crema);box-shadow:0 0 0 0 rgba(217,112,43,.6);animation:latido 2.4s ease-in-out infinite}
+.vs{align-self:start;margin-top:43px;/* centro de la camiseta: 14 (etiqueta) + 10 (hueco) + 48 (radio) = 72; menos 29 (radio del VS) */width:58px;height:58px;border-radius:50%;background:linear-gradient(145deg,#ee8a45,var(--balon));color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;border:3px solid var(--crema);box-shadow:0 0 0 0 rgba(217,112,43,.6);animation:latido 2.4s ease-in-out infinite}
 @keyframes latido{0%,100%{box-shadow:0 0 0 0 rgba(217,112,43,.55)}50%{box-shadow:0 0 0 12px rgba(217,112,43,0)}}
 .accion{position:relative;z-index:1;display:flex;justify-content:center;margin-top:24px}
 button{border:0;border-radius:999px;padding:14px 30px;cursor:pointer;font-weight:700;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;transition:transform .15s,filter .15s,box-shadow .15s}
@@ -54,8 +54,14 @@ button.pri2:hover,button.sec:hover{filter:brightness(1.1)}
 @keyframes bote{from{transform:translateY(0)}to{transform:translateY(-7px)}}
 
 /* forma reciente */
-#forma{margin-top:20px;background:#fff;border-radius:18px;padding:18px 20px;border:1px solid var(--azul-cl);box-shadow:var(--sombra);animation:entra .45s ease-out both}
-#forma h2{margin:0 0 2px;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--azul)}
+#forma{margin-top:20px;background:#fff;border-radius:18px;padding:0 20px;border:1px solid var(--azul-cl);box-shadow:var(--sombra);animation:entra .45s ease-out both}
+#forma>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 0;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--azul)}
+#forma>summary::-webkit-details-marker{display:none}
+#forma>summary::after{content:"";width:9px;height:9px;border-right:3px solid var(--balon);border-bottom:3px solid var(--balon);transform:rotate(45deg);transition:transform .25s;margin-right:4px;flex:none}
+#forma[open]>summary::after{transform:rotate(-135deg)}
+#forma>summary small{font-size:11px;letter-spacing:.5px;text-transform:none;font-weight:500;color:#5a4a4d;margin-left:auto}
+#forma[open]>summary small{display:none}
+#forma .cuerpo{padding-bottom:18px}
 #forma .sub{font-size:12px;color:#5a4a4d;margin:0 0 12px}
 .fila{display:grid;grid-template-columns:1fr 1.4fr 1fr;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--crema2);font-size:14px;animation:entra .4s ease-out both;animation-delay:calc(var(--i,0)*35ms)}
 .fila.cab{border-top:0;font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:13px}
@@ -95,7 +101,7 @@ button.pri2:hover,button.sec:hover{filter:brightness(1.1)}
 .camiseta{position:relative;overflow:hidden}
 .camiseta.con-logo{overflow:visible}
 .eq:hover .camiseta{transform:translateY(-4px) rotate(-3deg)}
-#forma,#marcador,details{transition:transform .25s,box-shadow .25s}
+#forma,#marcador{transition:transform .25s,box-shadow .25s}
 #forma:hover{transform:translateY(-2px);box-shadow:0 16px 34px -14px rgba(15,58,88,.45)}
 .corona{display:inline-block;margin-right:6px;animation:bote .6s ease-in-out infinite alternate}
 .sk{background:linear-gradient(90deg,#e8e2c8 25%,#f6f1dc 50%,#e8e2c8 75%);background-size:200% 100%;animation:sk 1.2s linear infinite;border-radius:6px;color:transparent!important}
@@ -106,11 +112,16 @@ details{margin-top:28px;background:var(--azul-cl);border-radius:14px;padding:14p
 summary{cursor:pointer;color:var(--azul);font-weight:700;font-size:14px}
 fieldset{border:1px solid var(--azul);border-radius:8px;margin:12px 0;padding:8px 14px;background:#fff}
 legend{color:var(--azul);font-weight:700;font-size:13px;font-family:Montserrat,Arial,sans-serif}
-label.m{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:6px 0;font-size:13px}
-label.m input{width:110px;padding:4px}
+label.m{display:grid;grid-template-columns:1fr 110px;column-gap:12px;align-items:center;margin:0;padding:9px 0;border-top:1px solid var(--crema2);font-size:13px}
+label.m:first-child{border-top:0}
+label.m .n{font-weight:700;color:var(--azul)}
+label.m .cod{display:block;font-family:Consolas,monospace;font-size:11px;color:#7a6a6d;margin-top:1px}
+label.m .exp{grid-column:1/-1;font-size:12px;line-height:1.4;color:#5a4a4d;margin-top:3px}
+label.m input{width:110px;padding:4px;grid-row:1;grid-column:2}
+.ayuda{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;border-radius:50%;background:var(--azul);color:#fff;font-size:10px;font-weight:700;margin-left:6px;cursor:help;vertical-align:middle}
 .res{margin-top:12px;padding:12px;background:#fff;border-radius:8px;border-left:5px solid var(--azul);white-space:pre-wrap;font-size:14px}
 .nota{font-size:12px;color:#5a4a4d}
-@media (max-width:620px){.mar-eq{grid-template-columns:1fr 1fr}.mar-eq>.etq{display:none}.mar-eq .pct{font-size:32px}.duelo{grid-template-columns:1fr;justify-items:center}.vs{margin:0}header h1{font-size:24px}header img{height:64px}.puntos .num{font-size:40px}.camiseta{width:84px;height:84px;font-size:24px}.fila{grid-template-columns:1fr 1.2fr 1fr;gap:6px;font-size:13px}.fila .e{font-size:10px}#marcador{padding:18px 16px}}
+@media (max-width:620px){.mar-eq{grid-template-columns:1fr 1fr}.mar-eq>.etq{display:none}.mar-eq .pct{font-size:32px}.duelo{grid-template-columns:1fr;justify-items:center}.vs{margin:0;align-self:center}header h1{font-size:24px}header img{height:64px}.puntos .num{font-size:40px}.camiseta{width:84px;height:84px;font-size:24px}.fila{grid-template-columns:1fr 1.2fr 1fr;gap:6px;font-size:13px}.fila .e{font-size:10px}#marcador{padding:18px 16px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style></head><body><main>
 
@@ -153,11 +164,13 @@ label.m input{width:110px;padding:4px}
   </div>
 </section>
 
-<section id="forma" style="display:none" aria-label="Forma reciente de los dos equipos">
-  <h2>Forma de los últimos 10 partidos</h2>
+<details id="forma" style="display:none" aria-label="Forma reciente de los dos equipos">
+  <summary>Forma de los últimos 10 partidos <small>pulsa para desplegar</small></summary>
+  <div class="cuerpo">
   <p class="sub">Medias de cada equipo en sus 10 últimos partidos de temporada regular. En azul, el mejor de los dos en cada estadística.</p>
   <div id="forma-filas"></div>
-</section>
+  </div>
+</details>
 
 <div id="error" class="error" style="display:none"></div>
 
@@ -175,10 +188,10 @@ label.m input{width:110px;padding:4px}
 </section>
 
 <details><summary>Modo manual: escribir las 15 entradas</summary>
-<p class="nota">Diferencias local − visitante de los últimos 10 partidos; los porcentajes van de 0 a 1.</p>
+<p class="nota">Aquí das tú los datos en vez de elegir equipos. Cada dato resume cómo llegan los dos equipos al partido: casi todos son una <b>diferencia «local − visitante»</b> de la media de sus últimos 10 partidos (positivo = ventaja del local, negativo = ventaja del visitante). Los porcentajes se escriben de 0 a 1 (0,5 = 50 %). Debajo de cada campo tienes qué significa.</p>
 <form id="f"><fieldset><legend>Entradas</legend><div id="campos"></div></fieldset>
 <fieldset><legend>Solo para puntos totales</legend>
-<label class="m">Media de puntos de la liga (últimos 600 partidos) <input name="media_liga_reciente" type="number" step="any" value="229.3"></label></fieldset>
+<label class="m"><span><span class="n">Media de puntos de la liga</span><span class="cod">media_liga_reciente</span></span><input name="media_liga_reciente" type="number" step="any" value="229.3"><span class="exp">Media de puntos totales por partido de los últimos 600 partidos de toda la liga. El modelo de puntos predice cuánto se desvía el partido de este número y luego se lo vuelve a sumar (así no se queda anticuado cuando la liga anota más).</span></label></fieldset>
 <button class="pri2" type="button" onclick="pred('ganador')">¿Quién gana?</button>
 <button class="pri2" type="button" onclick="pred('puntos')">¿Cuántos puntos?</button>
 <button class="sec" type="button" onclick="ejemplo()">Rellenar un ejemplo</button></form>
@@ -253,9 +266,26 @@ async function partido(){
   finally{ico.classList.remove('rebota');btn.disabled=false;}
 }
 
+/* explicación sencilla de cada una de las 15 entradas: [nombre en claro, qué significa] */
+const AYUDA={
+dif_pts_favor_ult10:['Diferencia de puntos anotados','Puntos que anota de media cada equipo en sus últimos 10 partidos: local menos visitante. Ejemplo: +4 = el local anota 4 puntos más por partido.'],
+dif_pts_contra_ult10:['Diferencia de puntos encajados','Puntos que recibe de media cada equipo en sus últimos 10 partidos: local menos visitante. Un valor negativo es bueno para el local (encaja menos).'],
+dif_win_pct_ult10:['Diferencia de % de victorias (últimos 10)','Porcentaje de partidos ganados en los últimos 10 (de 0 a 1), local menos visitante. Ejemplo: 0,3 = el local ganó un 30 % más de sus últimos partidos que el visitante.'],
+dif_tiro_campo_pct_ult10:['Diferencia de acierto en tiros de campo','% de tiros de campo anotados (de 0 a 1), local menos visitante. Ejemplo: 0,02 = el local acierta 2 puntos porcentuales más.'],
+dif_triples_pct_ult10:['Diferencia de acierto en triples','% de triples anotados (de 0 a 1), local menos visitante.'],
+dif_libres_pct_ult10:['Diferencia de acierto en tiros libres','% de tiros libres anotados (de 0 a 1), local menos visitante.'],
+dif_rebotes_ult10:['Diferencia de rebotes','Rebotes por partido (ofensivos y defensivos), local menos visitante. Ejemplo: +3 = el local coge 3 rebotes más.'],
+dif_asistencias_ult10:['Diferencia de asistencias','Asistencias por partido (pases que acaban en canasta), local menos visitante.'],
+dif_perdidas_ult10:['Diferencia de pérdidas de balón','Balones perdidos por partido, local menos visitante. Un valor negativo es bueno para el local (pierde menos).'],
+dif_robos_ult10:['Diferencia de robos','Balones robados por partido, local menos visitante.'],
+dif_tapones_ult10:['Diferencia de tapones','Tiros del rival bloqueados por partido, local menos visitante.'],
+dif_dias_descanso:['Diferencia de días de descanso','Días desde el último partido de cada equipo (máximo 7), local menos visitante. Ejemplo: +1 = el local ha descansado un día más.'],
+dif_win_pct_temporada:['Diferencia de % de victorias (temporada)','Porcentaje de victorias en lo que va de temporada (de 0 a 1), local menos visitante. Mide la calidad general del equipo, no solo su racha.'],
+suma_pts_favor_ult10:['Suma de puntos anotados','Puntos anotados por partido (últimos 10) del local MÁS los del visitante. Es la señal principal del ritmo ofensivo: ronda 220-230 en la NBA actual.'],
+suma_pts_contra_ult10:['Suma de puntos encajados','Puntos recibidos por partido (últimos 10) del local MÁS los del visitante. También ronda 220-230; se usa sobre todo para estimar los puntos totales.']};
 let cols=[];
 fetch('/contrato').then(r=>r.json()).then(c=>{cols=c.entradas;
- $('campos').innerHTML=cols.map(n=>`<label class="m">${n} <input name="${n}" type="number" step="any" value="0"></label>`).join('');});
+ $('campos').innerHTML=cols.map(n=>{const a=AYUDA[n]||[n,''];return `<label class="m" title="${a[1].replace(/"/g,'&quot;')}"><span><span class="n">${a[0]}</span><span class="ayuda" aria-hidden="true">?</span><span class="cod">${n}</span></span><input name="${n}" type="number" step="any" value="0"><span class="exp">${a[1]}</span></label>`;}).join('');});
 function datos(){const o={};new FormData($('f')).forEach((v,k)=>o[k]=parseFloat(v));return o;}
 function ejemplo(){const ej={dif_pts_favor_ult10:4,dif_pts_contra_ult10:-3,dif_win_pct_ult10:.3,dif_win_pct_temporada:.2,suma_pts_favor_ult10:228,suma_pts_contra_ult10:226};
  for(const k in ej){const i=document.querySelector(`[name=${k}]`); if(i) i.value=ej[k];}}
