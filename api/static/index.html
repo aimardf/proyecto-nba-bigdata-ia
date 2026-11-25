@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0F3A58"><link rel="icon" href="/static/logo_hoopmind.jpg">
 <title>HoopMind · Predicción de partidos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
@@ -88,6 +89,18 @@ button.pri2:hover,button.sec:hover{filter:brightness(1.1)}
 .pie{font-size:11px;opacity:.6;margin-top:12px}
 .error{background:var(--granate-cl);color:var(--granate);border-left:5px solid var(--granate);padding:12px;border-radius:8px;white-space:pre-wrap;margin-top:16px;font-size:14px;animation:entra .3s ease-out}
 
+/* extras */
+.pista{background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 2px,transparent 2px 46px),radial-gradient(600px 260px at 50% 45%,#1d6190 0,var(--azul-osc) 75%)}
+.camiseta::before{content:"";position:absolute}
+.camiseta{position:relative;overflow:hidden}
+.camiseta.con-logo{overflow:visible}
+.eq:hover .camiseta{transform:translateY(-4px) rotate(-3deg)}
+#forma,#marcador,details{transition:transform .25s,box-shadow .25s}
+#forma:hover{transform:translateY(-2px);box-shadow:0 16px 34px -14px rgba(15,58,88,.45)}
+.corona{display:inline-block;margin-right:6px;animation:bote .6s ease-in-out infinite alternate}
+.sk{background:linear-gradient(90deg,#e8e2c8 25%,#f6f1dc 50%,#e8e2c8 75%);background-size:200% 100%;animation:sk 1.2s linear infinite;border-radius:6px;color:transparent!important}
+@keyframes sk{to{background-position:-200% 0}}
+.puntos .num::after{content:" pts";font-size:16px;color:var(--crema);opacity:.7;letter-spacing:1px}
 /* modo manual */
 details{margin-top:28px;background:var(--azul-cl);border-radius:14px;padding:14px 18px}
 summary{cursor:pointer;color:var(--azul);font-weight:700;font-size:14px}
@@ -105,7 +118,7 @@ label.m input{width:110px;padding:4px}
   <img src="/static/logo_hoopmind.jpg" alt="Logo de HoopMind: aro con red y barras de datos">
   <div><h1>HOOP<span>MIND</span></h1><p>AI Basketball Analytics</p></div>
 </header>
-<p id="datos">Cargando equipos…</p>
+<p id="datos"><span class="sk">Cargando equipos de la API, un momento…</span></p>
 
 <section class="pista" aria-label="Elige los dos equipos">
   <svg class="lineas" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" fill="none" stroke="#F8F5E4" stroke-width="3">
@@ -219,7 +232,7 @@ async function partido(){
     $('m-nl').textContent=j.local;$('m-nv').textContent=j.visitante;
     cuenta($('m-pl'),pl,' %',900);cuenta($('m-pv'),pv,' %',900);
     $('m-pl').classList.toggle('g',gana);$('m-pv').classList.toggle('g',!gana);
-    $('m-gan').innerHTML=`Favorito: <b>${gana?j.local:j.visitante}</b> ${gana?'(en casa)':'(a domicilio)'}`;
+    $('m-gan').innerHTML=`<span class="corona">🏆</span>Favorito: <b>${gana?j.local:j.visitante}</b> ${gana?'(en casa)':'(a domicilio)'}`;
     cuenta($('m-pts'),Math.round(j.puntos.puntos_totales),'',1100);$('m-fecha').textContent='datos hasta '+j.datos_hasta;
     const m=$('marcador');m.classList.remove('ver');void m.offsetWidth;m.classList.add('ver');
     $('b-local').style.width='50%';$('b-visit').style.width='50%';
