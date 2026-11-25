@@ -113,6 +113,7 @@ button.pri2:hover,button.sec:hover{filter:brightness(1.1)}
 .fecha input{padding:7px 10px;border-radius:8px;border:2px solid var(--crema);background:var(--crema);color:var(--granate);font-weight:700;font-family:inherit}
 .fecha button{padding:6px 12px;font-size:11px;background:transparent;border:2px solid var(--crema);color:var(--crema)}
 .fecha .h{flex-basis:100%;text-align:center;font-size:11px;opacity:.8}
+.fecha .tend{flex-basis:100%;text-align:center;font-size:12px;cursor:pointer}.fecha .tend input{margin-right:6px;accent-color:var(--balon)}
 .descanso input:disabled{opacity:.45}
 .aviso{margin-top:14px;padding:10px 12px;border-radius:8px;background:rgba(217,112,43,.18);border-left:4px solid var(--balon);font-size:13px;line-height:1.4}
 .real{margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(248,245,228,.1);font-size:13px;line-height:1.5}
@@ -177,6 +178,7 @@ label.m input{width:110px;padding:4px;grid-row:1;grid-column:2}
     <label for="fecha"><b>Fecha del partido</b></label>
     <input id="fecha" type="date" min="2000-11-01" aria-describedby="fecha-ayuda">
     <button type="button" id="hoy" onclick="$('fecha').value='';fechaCambia()">Último estado</button>
+    <label class="tend"><input type="checkbox" id="tend" checked> Fecha futura: seguir la tendencia de la liga (cada año se anotan más puntos)</label>
     <span class="h" id="fecha-ayuda">Vacío = próximo partido con los datos más recientes. Fecha pasada = forma real de cada equipo ese día y resultado real. Fecha futura = estimación.</span>
   </div>
   <div class="accion">
@@ -321,7 +323,7 @@ async function partido(){
   try{
     const fecha=$('fecha').value;
     const cuerpo={local_id:parseInt($('local').value),visitante_id:parseInt($('visitante').value)};
-    if(fecha)cuerpo.fecha=fecha;else{cuerpo.dias_descanso_local=parseFloat($('dl').value);cuerpo.dias_descanso_visitante=parseFloat($('dv').value);}
+    if(fecha){cuerpo.fecha=fecha;cuerpo.con_tendencia=$('tend').checked;}else{cuerpo.dias_descanso_local=parseFloat($('dl').value);cuerpo.dias_descanso_visitante=parseFloat($('dv').value);}
     const resp=await fetch(fecha?'/predict/fecha':'/predict/partido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cuerpo)});
     const j=await resp.json(); if(!resp.ok){$('marcador').classList.remove('ver');verError(errTxt(j));return;}
     const pl=j.ganador.prob_local*100,pv=j.ganador.prob_visitante*100,gana=j.ganador.ganador==='local';

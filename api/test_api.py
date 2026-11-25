@@ -179,3 +179,15 @@ def test_forma_hasta_coincide_con_la_tabla_de_modelado():
         assert abs((lo[f"{m}_ult10"] - vi[f"{m}_ult10"]) - fila[f"dif_{m}_ult10"]) < 1e-2
     assert abs((lo["win_pct_temporada"] - vi["win_pct_temporada"]) - fila["dif_win_pct_temporada"]) < 1e-3
     assert lo["dias_descanso"] - vi["dias_descanso"] == fila["dif_dias_descanso"]
+
+
+def test_futuro_con_y_sin_tendencia(cliente):
+    c, _ = cliente
+    base = {"local_id": 1, "visitante_id": 2, "fecha": "2036-01-15"}
+    con = c.post("/predict/fecha", json=base).json()
+    sin = c.post("/predict/fecha", json={**base, "con_tendencia": False}).json()
+    assert sin["tendencia"] is None and con["tendencia"]["puntos_por_ano"] > 0
+    assert con["puntos"]["media_liga_usada"] > sin["puntos"]["media_liga_usada"]      # la liga "sube"
+    assert con["puntos"]["puntos_totales"] >= sin["puntos"]["puntos_totales"]
+    lejos = c.post("/predict/fecha", json={**base, "fecha": "2061-01-15"}).json()
+    assert lejos["tendencia"]["anos_aplicados"] == 10.0                                  # tope de extrapolación

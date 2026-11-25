@@ -205,6 +205,7 @@ class PartidoFecha(BaseModel):
     local_id: int = Field(..., description="id del equipo local (ver /equipos)")
     visitante_id: int = Field(..., description="id del equipo visitante (ver /equipos)")
     fecha: datetime.date = Field(..., description="Fecha del partido (AAAA-MM-DD). Pasada: se usan sus 10 partidos anteriores a esa fecha. Futura: se usa el estado más reciente.")
+    con_tendencia: bool = Field(True, description="Solo fechas futuras: si es true, sube el nivel de puntos de la liga siguiendo la tendencia de los últimos años")
 
 
 def _historial():
@@ -215,6 +216,25 @@ def _historial():
         import pandas as pd
         _cache["historial"] = pd.read_csv(ruta, parse_dates=["game_date"])
     return _cache["historial"]
+
+
+ANOS_TENDENCIA = 10    # temporadas completas usadas para medir cuánto sube la liga por año
+MAX_ANOS_EXTRAPOLAR = 10   # más allá, el nivel de puntos se queda fijo (no inventamos siglos de tendencia)
+
+
+def _serie():
+    ruta = RAIZ / "docs" / "drift" / "drift_por_temporada.csv"
+    if not ruta.exists():
+        raise HTTPException(404, f"Falta {ruta}")
+    with open(ruta, encoding="utf-8") as f:
+        return [{"temporada": int(r["temporada"]), "media": float(r["media_puntos"]), "partidos": int(r["partidos"])} for r in csv.DictReader(f)]
+
+
+def _pendiente():
+    """Puntos totales que sube la liga por año: recta (mínimos cuadrados) sobre las últimas 10 temporadas casi completas."""
+    import numpy as np
+    t = [x for x in _serie() if x["partidos"] >= 900][-ANOS_TENDENCIA:]
+    return float(np.polyfit([x["temporada"] for x in t], [x["media"] for x in t], 1)[0]) if len(t) >= 3 else 0.0
 
 
 @app.post("/predict/fecha")
@@ -232,7 +252,7 @@ def predecir_fecha(p: PartidoFecha):
     fecha = pd.Timestamp(p.fecha)
     corte = pd.Timestamp(est["fecha_corte"])
     futuro = fecha > corte
-    real, aviso = None, None
+    real, aviso, tendencia, ajuste = None, None, None, 0.0
     if futuro:
         por_id = {x["id"]: x for x in est["equipos"]}
         lo, vi = dict(por_id[p.local_id]), dict(por_id[p.visitante_id])
@@ -243,6 +263,16 @@ def predecir_fecha(p: PartidoFecha):
         temporada = max(est["temporada"], temporada_de(fecha))
         aviso = (f"Estimación: ese partido aún no se ha jugado. Se usa la forma más reciente conocida (datos hasta {datos_hasta}); "
                  "cuanto más lejos esté la fecha, menos fiable es.")
+        if p.con_tendencia:
+            # La liga cada vez anota más: sumamos a la media de liga (y a las dos sumas de puntos de las entradas, que son
+            # absolutas) lo que subiría según la tendencia reciente. Así el modelo ve la misma situación "relativa" que ya conoce.
+            anos = min(max((fecha - corte).days / 365.25, 0), MAX_ANOS_EXTRAPOLAR)
+            sube = _pendiente()
+            ajuste = round(sube * anos, 1)
+            ref = round(ref + ajuste, 2)
+            tendencia = {"puntos_por_ano": round(sube, 2), "anos_aplicados": round(anos, 1), "ajuste": ajuste}
+            aviso += (f" Se aplica la tendencia de la liga (+{tendencia['puntos_por_ano']} puntos por año en las últimas {ANOS_TENDENCIA} temporadas), "
+                      f"que suma {ajuste} puntos al nivel actual" + (f"; más allá de {MAX_ANOS_EXTRAPOLAR} años la tendencia se detiene." if (fecha - corte).days / 365.25 > MAX_ANOS_EXTRAPOLAR else "."))
     else:
         h = _historial()
         lo, vi = forma_hasta(h, p.local_id, fecha), forma_hasta(h, p.visitante_id, fecha)
@@ -262,13 +292,16 @@ def predecir_fecha(p: PartidoFecha):
             aviso = ("Ese día esos dos equipos no jugaron entre sí (o no era temporada regular), así que no hay resultado real con que comparar. "
                      "La predicción usa su forma justo antes de esa fecha.")
     ent = _entradas(lo, vi, lo["dias_descanso"], vi["dias_descanso"])
-    df = _df(ent)
-    ganador, puntos = _pred_ganador(df), _pred_puntos(df, ref)
+    ganador = _pred_ganador(_df(ent))                 # el ganador solo usa diferencias: no depende del nivel de puntos
+    if ajuste:
+        for c in ("suma_pts_favor_ult10", "suma_pts_contra_ult10"):
+            ent[c] += ajuste
+    puntos = _pred_puntos(_df(ent), ref)
     if real:
         real["acierta_ganador"] = ganador["ganador"] == real["ganador"]
         real["error_puntos"] = round(puntos["puntos_totales"] - real["puntos_totales"], 1)
     return {"local": nombres[p.local_id], "visitante": nombres[p.visitante_id], "fecha": str(p.fecha), "modo": "futuro" if futuro else "pasado",
-            "datos_hasta": datos_hasta, "temporada": temporada, "aviso": aviso, "real": real,
+            "datos_hasta": datos_hasta, "temporada": temporada, "aviso": aviso, "real": real, "tendencia": tendencia,
             "dias_descanso": {"local": lo["dias_descanso"], "visitante": vi["dias_descanso"]},
             "entradas": _limpio(ent), "ganador": ganador, "puntos": puntos}
 
@@ -276,11 +309,7 @@ def predecir_fecha(p: PartidoFecha):
 @app.get("/serie-puntos")
 def serie_puntos():
     """Puntos totales medios por temporada (los de docs/drift/drift_por_temporada.csv), para dibujar el drift."""
-    ruta = RAIZ / "docs" / "drift" / "drift_por_temporada.csv"
-    if not ruta.exists():
-        raise HTTPException(404, f"Falta {ruta}")
-    with open(ruta, encoding="utf-8") as f:
-        filas = [{"temporada": int(r["temporada"]), "media": float(r["media_puntos"]), "partidos": int(r["partidos"])} for r in csv.DictReader(f)]
+    filas = _serie()
     est = _cache.get("estado") or (json.loads(_ruta("estado_equipos.json").read_text(encoding="utf-8")) if _ruta("estado_equipos.json").exists() else {})
     return {"temporadas": filas, "entrenamiento_hasta": 2022, "lote2_desde": 2024, "media_liga_reciente": est.get("media_liga_reciente")}
 
