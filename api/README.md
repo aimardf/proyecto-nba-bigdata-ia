@@ -42,3 +42,12 @@ Si faltan los modelos, los endpoints de predicción responden 503 con el comando
 
 ## Elegir dos equipos
 `scripts/estado_equipos.py` guarda en `models/estado_equipos.json` la media de los últimos 10 partidos de cada equipo y su % de victorias de la temporada, con las mismas definiciones que `construir_modelado.py` (hay una prueba que lo comprueba). Los datos llegan hasta la fecha del último partido; para actualizarlos hay que volver a ejecutar el script con datos nuevos. Si en tu PC no existe `data/curated_export`, usa `--raw C:/Users/aimar/Desktop/nba-datos`.
+
+## Predecir en una fecha (pasada o futura)
+
+`estado_equipos.py` guarda también `models/historial_equipos.csv.gz` (una fila por equipo y partido, ~3 MB): es el único histórico que se guarda. `POST /predict/fecha` (local, visitante, fecha) lo usa así:
+
+- **Fecha pasada**: calcula la forma de cada equipo con sus 10 partidos anteriores a esa fecha (nunca cuenta el propio día), usa la media de liga de los 600 partidos previos, y si ese partido existe devuelve el resultado real y si el modelo acertó. Solo hay temporada regular desde 2000.
+- **Fecha futura**: usa el estado más reciente de `estado_equipos.json`, calcula los días de descanso hasta esa fecha y avisa de que es una estimación.
+
+`GET /serie-puntos` devuelve los puntos medios por temporada (de `docs/drift/drift_por_temporada.csv`) para el gráfico de drift de la web.
