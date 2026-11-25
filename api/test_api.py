@@ -50,9 +50,11 @@ def cliente(tmp_path, monkeypatch):
     ref = np.full(400, 225.0)
     guardar_modelo(ModeloPuntosRelativo("ridge").fit(X, 225 + X.iloc[:, 2] * 3, ref), tmp_path / "modelo_puntos.joblib")
     import json
-    from estado_equipos import calcular
+    from estado_equipos import calcular, historial
+    from construir_modelado import largo_equipos
     g, e = partidos_de_juguete()
     (tmp_path / "estado_equipos.json").write_text(json.dumps(calcular(g, e)), encoding="utf-8")
+    historial(largo_equipos(g, e)[1]).to_csv(tmp_path / "historial_equipos.csv.gz", index=False, compression="gzip")
     return TestClient(main.app), main
 
 
@@ -131,3 +133,49 @@ def test_sin_estado_da_503(tmp_path, monkeypatch):
     from api import main
     main._cache.clear()
     assert TestClient(main.app).get("/equipos").status_code == 503
+
+
+def test_fecha_pasada_con_resultado_real(cliente):
+    c, main = cliente
+    g, _ = partidos_de_juguete()
+    f = g[g.game_date >= "2023-02-01"].iloc[0]          # un partido real del histórico de juguete
+    r = c.post("/predict/fecha", json={"local_id": int(f.home_team_id), "visitante_id": int(f.away_team_id), "fecha": str(f.game_date.date())})
+    assert r.status_code == 200
+    j = r.json()
+    assert j["modo"] == "pasado" and j["real"]["puntos_totales"] == f.home_score + f.away_score
+    assert j["real"]["acierta_ganador"] in (True, False) and 127 <= j["puntos"]["puntos_totales"] <= 319
+    assert j["datos_hasta"] < j["fecha"]                 # nunca usa el propio día (sin fuga)
+
+
+def test_fecha_futura_es_estimacion(cliente):
+    c, _ = cliente
+    r = c.post("/predict/fecha", json={"local_id": 1, "visitante_id": 2, "fecha": "2031-01-15"})
+    j = r.json()
+    assert r.status_code == 200 and j["modo"] == "futuro" and j["real"] is None and "Estimación" in j["aviso"]
+    assert j["dias_descanso"] == {"local": 7, "visitante": 7}
+
+
+def test_fecha_demasiado_antigua_da_422(cliente):
+    c, _ = cliente
+    assert c.post("/predict/fecha", json={"local_id": 1, "visitante_id": 2, "fecha": "2000-01-01"}).status_code == 422
+    assert c.post("/predict/fecha", json={"local_id": 1, "visitante_id": 1, "fecha": "2031-01-15"}).status_code == 422
+
+
+def test_serie_puntos(cliente):
+    j = cliente[0].get("/serie-puntos").json()
+    assert j["temporadas"][0]["temporada"] == 2000 and j["lote2_desde"] == 2024
+
+
+def test_forma_hasta_coincide_con_la_tabla_de_modelado():
+    """La forma en una fecha pasada = la fila de construir_modelado.py de ese partido."""
+    import construir_modelado as cm
+    from estado_equipos import forma_hasta, historial
+    g, e = partidos_de_juguete()
+    h = historial(cm.largo_equipos(g, e)[1])
+    ds = cm.construir(g, e)
+    fila = ds[ds.game_date >= "2023-03-01"].iloc[0]
+    lo, vi = forma_hasta(h, int(fila.home_team_id), fila.game_date), forma_hasta(h, int(fila.away_team_id), fila.game_date)
+    for m in ("pts_favor", "pts_contra", "win_pct", "rebotes", "tapones"):
+        assert abs((lo[f"{m}_ult10"] - vi[f"{m}_ult10"]) - fila[f"dif_{m}_ult10"]) < 1e-2
+    assert abs((lo["win_pct_temporada"] - vi["win_pct_temporada"]) - fila["dif_win_pct_temporada"]) < 1e-3
+    assert lo["dias_descanso"] - vi["dias_descanso"] == fila["dif_dias_descanso"]

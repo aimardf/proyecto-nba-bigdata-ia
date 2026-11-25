@@ -13,6 +13,11 @@ Uso (desde la raíz del repo; las mismas carpetas que construir_modelado.py):
   python3 scripts/estado_equipos.py --curated data/curated_export
   python3 scripts/estado_equipos.py --raw C:/Users/aimar/Desktop/nba-datos       # alternativa con los CSV originales
 Salida por defecto: models/estado_equipos.json
+
+Además guarda models/historial_equipos.csv.gz: una fila por equipo y partido (temporada regular desde 2000) con
+sus puntos y estadísticas. La API lo usa para "viajar en el tiempo": a una fecha pasada le calcula la forma de cada
+equipo con sus 10 partidos anteriores a esa fecha (misma definición que construir_modelado.py) y compara con el
+resultado real. Pesa ~3 MB y es el único histórico que hace falta guardar.
 """
 import argparse
 import json
@@ -45,11 +50,49 @@ def _nombres(g):
     return dict(zip(n.equipo, n.nombre))
 
 
+COLS_HISTORIAL = ["game_id", "game_date", "temporada", "equipo", "rival", "es_local", "pts_favor", "pts_contra", "gana"] + list(STATS.values())
+FUENTES = {"pts_favor": "pts_favor", "pts_contra": "pts_contra", "win_pct": "gana", **{v: v for v in STATS.values()}}
+
+
+def temporada_de(fecha):
+    """Temporada NBA a la que pertenece una fecha (la temporada 2024 empieza en octubre de 2024)."""
+    fecha = pd.Timestamp(fecha)
+    return fecha.year if fecha.month >= 8 else fecha.year - 1
+
+
+def historial(largo):
+    """Tabla larga + columna 'rival' (el otro equipo del mismo partido), lista para guardar."""
+    par = largo[["game_id", "equipo"]].rename(columns={"equipo": "rival"})
+    h = largo.merge(par, on="game_id")
+    h = h[h.equipo != h.rival].drop_duplicates(["game_id", "equipo"])
+    h = h.sort_values(["game_date", "game_id", "equipo"])[COLS_HISTORIAL].reset_index(drop=True)
+    cols = list(STATS.values())
+    h[cols] = h[cols].round(4)
+    return h
+
+
+def forma_hasta(h, equipo, fecha):
+    """Forma de un equipo ANTES de 'fecha' (no cuenta ese día): media de sus últimos 10 partidos, % de victorias de
+    esa temporada y días de descanso. Devuelve el mismo formato que cada equipo de estado_equipos.json, o None si
+    el equipo no tiene 10 partidos previos. 'h' es la tabla de historial()."""
+    fecha = pd.Timestamp(fecha)
+    previos = h[(h.equipo == equipo) & (h.game_date < fecha)].sort_values(["game_date", "game_id"])
+    if len(previos) < VENTANA:
+        return None
+    ult = previos.tail(VENTANA)
+    temp = previos[previos.temporada == temporada_de(fecha)]
+    fila = {"id": int(equipo), "ultimo_partido": str(previos.game_date.max().date()), "partidos_temporada": int(len(temp)),
+            "win_pct_temporada": _num(temp.gana.mean()) if len(temp) else None,
+            "dias_descanso": int(min(7, (fecha - previos.game_date.max()).days))}
+    for nombre, col in FUENTES.items():
+        fila[f"{nombre}_ult{VENTANA}"] = _num(ult[col].mean())
+    return fila
+
+
 def calcular(g, e):
     gf, largo = largo_equipos(g, e)
     ultima = int(largo.temporada.max())
-    fuentes = {"pts_favor": "pts_favor", "pts_contra": "pts_contra", "win_pct": "gana",
-               **{v: v for v in STATS.values()}}
+    fuentes = FUENTES
     nombres = _nombres(g)
     equipos = []
     for eq, d in largo[largo.temporada == ultima].groupby("equipo"):
@@ -74,11 +117,16 @@ def main():
     ap.add_argument("--curated", help="carpeta con partidos.csv y estadisticas_equipo.csv")
     ap.add_argument("--raw", help="carpeta con Games.csv y TeamStatistics.csv originales")
     ap.add_argument("--salida", default="models/estado_equipos.json")
+    ap.add_argument("--historial", default="models/historial_equipos.csv.gz", help="histórico por equipo para predecir fechas pasadas")
     a = ap.parse_args()
     if bool(a.curated) == bool(a.raw):
         ap.error("indica --curated o --raw (uno solo)")
     g, e = cargar_curated(pathlib.Path(a.curated)) if a.curated else cargar_raw(pathlib.Path(a.raw))
     est = calcular(g, e)
+    hist = historial(largo_equipos(g, e)[1])
+    pathlib.Path(a.historial).parent.mkdir(parents=True, exist_ok=True)
+    hist.to_csv(a.historial, index=False, compression="gzip")
+    print(f"Historial: {len(hist):,} filas equipo-partido -> {a.historial}")
     out = pathlib.Path(a.salida)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(est, ensure_ascii=False, indent=1), encoding="utf-8")

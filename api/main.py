@@ -4,6 +4,8 @@ Dos modelos, dos endpoints:
   POST /predict/ganador  -> probabilidad de que gane el local (modelo models/modelo_ganador.joblib)
   POST /predict/puntos   -> puntos totales del partido (modelo models/modelo_puntos.joblib, relativo a la liga)
   GET  /equipos          -> equipos disponibles y fecha de los datos (models/estado_equipos.json)
+  POST /predict/fecha    -> igual que /predict/partido pero en una fecha: pasada (forma con los 10 partidos anteriores y resultado real) o futura (estimación)
+  GET  /serie-puntos     -> puntos medios por temporada (para el gráfico de drift de la web)
   POST /predict/partido  -> elige local y visitante: la API calcula las 15 entradas y predice ganador y puntos
   GET  /health           -> comprueba que la API y los modelos están listos
   GET  /                 -> página sencilla para probar a mano
@@ -15,6 +17,8 @@ Arrancar (desde la raíz del repo):
   pip install -r api/requirements.txt
   uvicorn api.main:app --reload
 """
+import csv
+import datetime
 import json
 import math
 import os
@@ -171,19 +175,114 @@ def predecir_partido(p: Partido):
         if i not in por_id:
             raise HTTPException(404, f"Equipo {i} no encontrado; consulta /equipos")
     lo, vi = por_id[p.local_id], por_id[p.visitante_id]
+    ent = _entradas(lo, vi, p.dias_descanso_local, p.dias_descanso_visitante)
+    df = _df(ent)
+    ref = est["media_liga_reciente"]
+    return {"local": lo["nombre"], "visitante": vi["nombre"], "datos_hasta": est["fecha_corte"], "temporada": est["temporada"],
+            "entradas": _limpio(ent), "ganador": _pred_ganador(df), "puntos": _pred_puntos(df, ref)}
+
+
+def _entradas(lo, vi, dias_local, dias_visit):
+    """Las 15 entradas a partir de la forma de cada equipo (mismas definiciones que construir_modelado.py)."""
     ent = {}
     for col in COLUMNAS:
         if col.startswith("dif_") and col.endswith("_ult10"):
             ent[col] = _v(lo.get(col[4:])) - _v(vi.get(col[4:]))
         elif col.startswith("suma_"):
             ent[col] = _v(lo.get(col[5:])) + _v(vi.get(col[5:]))
-    ent["dif_dias_descanso"] = p.dias_descanso_local - p.dias_descanso_visitante
+    ent["dif_dias_descanso"] = dias_local - dias_visit
     ent["dif_win_pct_temporada"] = _v(lo["win_pct_temporada"]) - _v(vi["win_pct_temporada"])
+    return ent
+
+
+def _df(ent):
     import pandas as pd
-    df = pd.DataFrame([ent])[COLUMNAS]
-    ref = est["media_liga_reciente"]
-    return {"local": lo["nombre"], "visitante": vi["nombre"], "datos_hasta": est["fecha_corte"],
-            "entradas": _limpio(ent), "ganador": _pred_ganador(df), "puntos": _pred_puntos(df, ref)}
+    return pd.DataFrame([ent])[COLUMNAS]
+
+
+# ---------- Elegir equipos Y una fecha (pasada o futura) ----------
+class PartidoFecha(BaseModel):
+    local_id: int = Field(..., description="id del equipo local (ver /equipos)")
+    visitante_id: int = Field(..., description="id del equipo visitante (ver /equipos)")
+    fecha: datetime.date = Field(..., description="Fecha del partido (AAAA-MM-DD). Pasada: se usan sus 10 partidos anteriores a esa fecha. Futura: se usa el estado más reciente.")
+
+
+def _historial():
+    if "historial" not in _cache:
+        ruta = _ruta("historial_equipos.csv.gz")
+        if not ruta.exists():
+            raise HTTPException(503, f"Falta {ruta}. Genera el histórico con: python scripts/estado_equipos.py --curated data/curated_export")
+        import pandas as pd
+        _cache["historial"] = pd.read_csv(ruta, parse_dates=["game_date"])
+    return _cache["historial"]
+
+
+@app.post("/predict/fecha")
+def predecir_fecha(p: PartidoFecha):
+    from estado_equipos import forma_hasta, temporada_de
+    from modelo_puntos import media_liga_actual
+    import pandas as pd
+    est = _estado()
+    nombres = {x["id"]: x["nombre"] for x in est["equipos"]}
+    if p.local_id == p.visitante_id:
+        raise HTTPException(422, "El local y el visitante tienen que ser equipos distintos")
+    for i in (p.local_id, p.visitante_id):
+        if i not in nombres:
+            raise HTTPException(404, f"Equipo {i} no encontrado; consulta /equipos")
+    fecha = pd.Timestamp(p.fecha)
+    corte = pd.Timestamp(est["fecha_corte"])
+    futuro = fecha > corte
+    real, aviso = None, None
+    if futuro:
+        por_id = {x["id"]: x for x in est["equipos"]}
+        lo, vi = dict(por_id[p.local_id]), dict(por_id[p.visitante_id])
+        for f in (lo, vi):   # descanso = días desde su último partido hasta la fecha elegida (tope 7)
+            f["dias_descanso"] = int(min(7, (fecha - pd.Timestamp(f["ultimo_partido"])).days))
+        ref = est["media_liga_reciente"]
+        datos_hasta = est["fecha_corte"]
+        temporada = max(est["temporada"], temporada_de(fecha))
+        aviso = (f"Estimación: ese partido aún no se ha jugado. Se usa la forma más reciente conocida (datos hasta {datos_hasta}); "
+                 "cuanto más lejos esté la fecha, menos fiable es.")
+    else:
+        h = _historial()
+        lo, vi = forma_hasta(h, p.local_id, fecha), forma_hasta(h, p.visitante_id, fecha)
+        for f, i in ((lo, p.local_id), (vi, p.visitante_id)):
+            if f is None:
+                raise HTTPException(422, f"{nombres[i]} no tiene 10 partidos de temporada regular antes del {p.fecha}. Prueba con una fecha posterior.")
+        previos = h[(h.es_local == 1) & (h.game_date < fecha)].sort_values(["game_date", "game_id"])
+        ref = round(media_liga_actual((previos.pts_favor + previos.pts_contra).values), 2)
+        datos_hasta = str(max(pd.Timestamp(lo["ultimo_partido"]), pd.Timestamp(vi["ultimo_partido"])).date())
+        temporada = temporada_de(fecha)
+        r = h[(h.game_date == fecha) & (h.equipo == p.local_id) & (h.rival == p.visitante_id) & (h.es_local == 1)]
+        if len(r):
+            r = r.iloc[0]
+            real = {"puntos_local": int(r.pts_favor), "puntos_visitante": int(r.pts_contra), "puntos_totales": int(r.pts_favor + r.pts_contra),
+                    "ganador": "local" if r.pts_favor > r.pts_contra else "visitante"}
+        else:
+            aviso = ("Ese día esos dos equipos no jugaron entre sí (o no era temporada regular), así que no hay resultado real con que comparar. "
+                     "La predicción usa su forma justo antes de esa fecha.")
+    ent = _entradas(lo, vi, lo["dias_descanso"], vi["dias_descanso"])
+    df = _df(ent)
+    ganador, puntos = _pred_ganador(df), _pred_puntos(df, ref)
+    if real:
+        real["acierta_ganador"] = ganador["ganador"] == real["ganador"]
+        real["error_puntos"] = round(puntos["puntos_totales"] - real["puntos_totales"], 1)
+    return {"local": nombres[p.local_id], "visitante": nombres[p.visitante_id], "fecha": str(p.fecha), "modo": "futuro" if futuro else "pasado",
+            "datos_hasta": datos_hasta, "temporada": temporada, "aviso": aviso, "real": real,
+            "dias_descanso": {"local": lo["dias_descanso"], "visitante": vi["dias_descanso"]},
+            "entradas": _limpio(ent), "ganador": ganador, "puntos": puntos}
+
+
+@app.get("/serie-puntos")
+def serie_puntos():
+    """Puntos totales medios por temporada (los de docs/drift/drift_por_temporada.csv), para dibujar el drift."""
+    ruta = RAIZ / "docs" / "drift" / "drift_por_temporada.csv"
+    if not ruta.exists():
+        raise HTTPException(404, f"Falta {ruta}")
+    with open(ruta, encoding="utf-8") as f:
+        filas = [{"temporada": int(r["temporada"]), "media": float(r["media_puntos"]), "partidos": int(r["partidos"])} for r in csv.DictReader(f)]
+    est = _cache.get("estado") or (json.loads(_ruta("estado_equipos.json").read_text(encoding="utf-8")) if _ruta("estado_equipos.json").exists() else {})
+    return {"temporadas": filas, "entrenamiento_hasta": 2022, "lote2_desde": 2024, "media_liga_reciente": est.get("media_liga_reciente")}
 
 
 app.mount("/static", StaticFiles(directory=RAIZ / "api" / "static"), name="static")

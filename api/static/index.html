@@ -107,6 +107,23 @@ button.pri2:hover,button.sec:hover{filter:brightness(1.1)}
 .sk{background:linear-gradient(90deg,#e8e2c8 25%,#f6f1dc 50%,#e8e2c8 75%);background-size:200% 100%;animation:sk 1.2s linear infinite;border-radius:6px;color:transparent!important}
 @keyframes sk{to{background-position:-200% 0}}
 .puntos .num::after{content:" pts";font-size:16px;color:var(--crema);opacity:.7;letter-spacing:1px}
+
+/* fecha, aviso, resultado real y gráfico */
+.fecha{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 12px;margin-top:20px;font-size:13px}
+.fecha input{padding:7px 10px;border-radius:8px;border:2px solid var(--crema);background:var(--crema);color:var(--granate);font-weight:700;font-family:inherit}
+.fecha button{padding:6px 12px;font-size:11px;background:transparent;border:2px solid var(--crema);color:var(--crema)}
+.fecha .h{flex-basis:100%;text-align:center;font-size:11px;opacity:.8}
+.descanso input:disabled{opacity:.45}
+.aviso{margin-top:14px;padding:10px 12px;border-radius:8px;background:rgba(217,112,43,.18);border-left:4px solid var(--balon);font-size:13px;line-height:1.4}
+.real{margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(248,245,228,.1);font-size:13px;line-height:1.5}
+.real b{font-family:Montserrat,Arial,sans-serif}.real .ok{color:#7fd69a}.real .ko{color:#ff9aa6}
+#grafico{margin-top:20px;display:none;background:#fff;border-radius:18px;padding:18px 20px;border:1px solid var(--azul-cl);box-shadow:var(--sombra)}
+#grafico.ver{display:block;animation:entra .45s ease-out}
+#grafico h2{margin:0 0 2px;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--azul)}
+#grafico .sub{font-size:12px;color:#5a4a4d;margin:0 0 10px;line-height:1.4}
+#grafico svg{width:100%;height:auto;display:block;font-family:Arial,Helvetica,sans-serif}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:#5a4a4d;margin-top:6px}
+.leyenda i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-2px}
 /* modo manual */
 details{margin-top:28px;background:var(--azul-cl);border-radius:14px;padding:14px 18px}
 summary{cursor:pointer;color:var(--azul);font-weight:700;font-size:14px}
@@ -156,6 +173,12 @@ label.m input{width:110px;padding:4px;grid-row:1;grid-column:2}
       <label class="descanso">Días de descanso <input id="dv" type="number" min="0" max="7" step="1" value="2"></label>
     </div>
   </div>
+  <div class="fecha">
+    <label for="fecha"><b>Fecha del partido</b></label>
+    <input id="fecha" type="date" min="2000-11-01" aria-describedby="fecha-ayuda">
+    <button type="button" id="hoy" onclick="$('fecha').value='';fechaCambia()">Último estado</button>
+    <span class="h" id="fecha-ayuda">Vacío = próximo partido con los datos más recientes. Fecha pasada = forma real de cada equipo ese día y resultado real. Fecha futura = estimación.</span>
+  </div>
   <div class="accion">
     <button class="prin" type="button" id="btn" onclick="partido()">
       <svg class="balon" id="ico" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2v20M5 4.5c4 3.5 4 11.5 0 15M19 4.5c-4 3.5-4 11.5 0 15"/></svg>
@@ -184,7 +207,16 @@ label.m input{width:110px;padding:4px;grid-row:1;grid-column:2}
   <div class="barra"><div id="b-local" style="width:50%"></div><div id="b-visit" style="width:50%"></div></div>
   <div class="ganador" id="m-gan"></div>
   <div class="puntos"><span class="num" id="m-pts">—</span><span class="etq">puntos totales previstos<br>en el partido</span></div>
+  <div class="aviso" id="m-aviso" style="display:none"></div>
+  <div class="real" id="m-real" style="display:none"></div>
   <div class="pie">Basado en los últimos 10 partidos de cada equipo y su % de victorias de la temporada. Es una estimación, no una garantía.</div>
+</section>
+
+<section id="grafico" aria-label="Puntos totales previstos y deriva de la liga">
+  <h2>Puntos totales previstos y drift</h2>
+  <p class="sub">La línea azul son los puntos totales medios de un partido NBA en cada temporada: la liga anota cada vez más (<b>drift</b>). Por eso el modelo predice la desviación respecto a la media de liga reciente y no usa el año. El punto naranja es esta predicción.</p>
+  <div id="graf-svg"></div>
+  <div class="leyenda"><span><i style="background:#174D75"></i>media de la temporada</span><span><i style="background:#D9702B"></i>predicción</span><span><i style="background:#fff;border:2px solid #21060A"></i>resultado real (si existe)</span><span><i style="background:#DCE7EF"></i>entrenamiento (hasta 2022)</span><span><i style="background:#F3DCCB"></i>lote 2 / drift (desde 2024)</span></div>
 </section>
 
 <details><summary>Modo manual: escribir las 15 entradas</summary>
@@ -246,19 +278,59 @@ fetch('/equipos').then(r=>r.json().then(j=>({ok:r.ok,j}))).then(({ok,j})=>{
 }).catch(e=>{$('datos').textContent='No se pudo conectar con la API: '+e;});
 $('local').addEventListener('change',camisetas);$('visitante').addEventListener('change',camisetas);
 
+/* ---- fecha del partido ---- */
+function fechaCambia(){const f=$('fecha').value;$('dl').disabled=$('dv').disabled=!!f;
+  $('dl').title=$('dv').title=f?'Con fecha, el descanso se calcula solo':'';}
+$('fecha').addEventListener('change',fechaCambia);
+let SERIE=null;
+fetch('/serie-puntos').then(r=>r.ok?r.json():null).then(j=>{SERIE=j;}).catch(()=>{});
+function grafico(pred,real,temp){
+  if(!SERIE){$('grafico').classList.remove('ver');return;}
+  const T=SERIE.temporadas,W=760,H=300,L=46,R=16,Tp=16,B=34;
+  const t0=T[0].temporada,t1=Math.max(T[T.length-1].temporada,temp);
+  const ys=T.map(x=>x.media).concat([pred],real!=null?[real]:[],SERIE.media_liga_reciente?[SERIE.media_liga_reciente]:[]);
+  const y0=Math.floor((Math.min(...ys)-6)/5)*5,y1=Math.ceil((Math.max(...ys)+6)/5)*5;
+  const X=t=>L+(t-t0)/(t1-t0)*(W-L-R),Y=v=>H-B-(v-y0)/(y1-y0)*(H-B-Tp);
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Puntos totales medios por temporada y predicción">`;
+  const a=SERIE.entrenamiento_hasta,b=SERIE.lote2_desde;
+  g+=`<rect x="${L}" y="${Tp}" width="${X(a+.5)-L}" height="${H-B-Tp}" fill="#DCE7EF" opacity=".55"/>`;
+  g+=`<rect x="${X(b-.5)}" y="${Tp}" width="${W-R-X(b-.5)}" height="${H-B-Tp}" fill="#F3DCCB" opacity=".7"/>`;
+  for(let v=y0;v<=y1;v+=10)g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e6e0c8"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#5a4a4d">${v}</text>`;
+  for(let t=t0;t<=t1;t+=4)g+=`<text x="${X(t)}" y="${H-12}" text-anchor="middle" font-size="11" fill="#5a4a4d">${t}</text>`;
+  g+=`<text x="${(L+X(a+.5))/2}" y="${Tp+12}" text-anchor="middle" font-size="10" fill="#174D75">entrenamiento</text>`;
+  g+=`<text x="${(X(b-.5)+W-R)/2}" y="${Tp+12}" text-anchor="middle" font-size="10" fill="#9a4a14">lote 2 (drift)</text>`;
+  g+=`<polyline fill="none" stroke="#174D75" stroke-width="2.5" stroke-linejoin="round" points="${T.map(x=>X(x.temporada).toFixed(1)+','+Y(x.media).toFixed(1)).join(' ')}"/>`;
+  if(SERIE.media_liga_reciente){const m=SERIE.media_liga_reciente;g+=`<line x1="${L}" x2="${W-R}" y1="${Y(m)}" y2="${Y(m)}" stroke="#21060A" stroke-dasharray="5 4" opacity=".6"/><text x="${L+4}" y="${Y(m)-5}" font-size="10" fill="#21060A">media de liga reciente ${m}</text>`;}
+  const px=X(temp);
+  if(real!=null)g+=`<circle cx="${px}" cy="${Y(real)}" r="6" fill="#fff" stroke="#21060A" stroke-width="2.5"/>`;
+  const alto=Y(pred)<60,ty=alto?Y(pred)+24:Y(pred)-14;
+  g+=`<circle cx="${px}" cy="${Y(pred)}" r="7" fill="#D9702B" stroke="#fff" stroke-width="2"/><text x="${Math.min(px,W-R-20)}" y="${ty}" text-anchor="middle" font-size="12" font-weight="700" fill="#9a4a14">${Math.round(pred)} pts</text>`;
+  g+='</svg>';$('graf-svg').innerHTML=g;$('grafico').classList.add('ver');}
+
+function resultado(j){
+  const av=$('m-aviso'),re=$('m-real');
+  av.style.display=j.aviso?'block':'none';av.textContent=j.aviso||'';
+  const r=j.real;re.style.display=r?'block':'none';
+  if(r){const gan=r.ganador==='local'?j.local:j.visitante;
+    re.innerHTML=`<b>Resultado real:</b> ${j.local} ${r.puntos_local} – ${r.puntos_visitante} ${j.visitante} (total ${r.puntos_totales} pts, ganó ${gan}).<br>`+
+    `Ganador: <b class="${r.acierta_ganador?'ok':'ko'}">${r.acierta_ganador?'el modelo acertó ✓':'el modelo falló ✗'}</b> · Puntos: la predicción se desvió <b>${r.error_puntos>0?'+':''}${r.error_puntos}</b> respecto al total real.`;}
+  grafico(j.puntos.puntos_totales,r?r.puntos_totales:null,j.temporada);
+}
 async function partido(){
   verError('');const ico=$('ico'),btn=$('btn');ico.classList.add('rebota');btn.disabled=true;
   try{
-    const resp=await fetch('/predict/partido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      local_id:parseInt($('local').value),visitante_id:parseInt($('visitante').value),
-      dias_descanso_local:parseFloat($('dl').value),dias_descanso_visitante:parseFloat($('dv').value)})});
+    const fecha=$('fecha').value;
+    const cuerpo={local_id:parseInt($('local').value),visitante_id:parseInt($('visitante').value)};
+    if(fecha)cuerpo.fecha=fecha;else{cuerpo.dias_descanso_local=parseFloat($('dl').value);cuerpo.dias_descanso_visitante=parseFloat($('dv').value);}
+    const resp=await fetch(fecha?'/predict/fecha':'/predict/partido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cuerpo)});
     const j=await resp.json(); if(!resp.ok){$('marcador').classList.remove('ver');verError(errTxt(j));return;}
     const pl=j.ganador.prob_local*100,pv=j.ganador.prob_visitante*100,gana=j.ganador.ganador==='local';
     $('m-nl').textContent=j.local;$('m-nv').textContent=j.visitante;
     cuenta($('m-pl'),pl,' %',900);cuenta($('m-pv'),pv,' %',900);
     $('m-pl').classList.toggle('g',gana);$('m-pv').classList.toggle('g',!gana);
     $('m-gan').innerHTML=`<span class="corona">🏆</span>Favorito: <b>${gana?j.local:j.visitante}</b> ${gana?'(en casa)':'(a domicilio)'}`;
-    cuenta($('m-pts'),Math.round(j.puntos.puntos_totales),'',1100);$('m-fecha').textContent='datos hasta '+j.datos_hasta;
+    cuenta($('m-pts'),Math.round(j.puntos.puntos_totales),'',1100);$('m-fecha').textContent=(j.fecha?j.fecha+' · ':'')+'datos hasta '+j.datos_hasta;
+    resultado(j);
     const m=$('marcador');m.classList.remove('ver');void m.offsetWidth;m.classList.add('ver');
     $('b-local').style.width='50%';$('b-visit').style.width='50%';
     setTimeout(()=>{$('b-local').style.width=pl+'%';$('b-visit').style.width=pv+'%';},60);
