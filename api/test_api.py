@@ -145,6 +145,9 @@ def test_fecha_pasada_con_resultado_real(cliente):
     assert j["modo"] == "pasado" and j["real"]["puntos_totales"] == f.home_score + f.away_score
     assert j["real"]["acierta_ganador"] in (True, False) and 127 <= j["puntos"]["puntos_totales"] <= 319
     assert j["datos_hasta"] < j["fecha"]                 # nunca usa el propio día (sin fuga)
+    assert set(j["forma"]) == {"local", "visitante"} and "pts_favor_ult10" in j["forma"]["local"] and "win_pct_temporada" in j["forma"]["local"]
+    ahora = c.get("/equipos").json()["equipos"]
+    assert j["forma"]["local"] != next(e for e in ahora if e["id"] == int(f.home_team_id))["forma"]    # no es la forma actual
 
 
 def test_fecha_futura_es_estimacion(cliente):
