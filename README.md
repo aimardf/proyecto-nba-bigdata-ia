@@ -8,6 +8,7 @@ Predicción del ganador de un partido (clasificación) y de los puntos totales d
 - `hive/`: limpieza con HiveQL (`02_limpieza_curated.hql`) y comprobaciones (`03_comprobaciones.hql`). `hive/generado/` lo crea el pipeline.
 - `notebooks/`: EDA y modelos.
 - `api/`: API FastAPI.
+- `app/`: panel Streamlit para explorar datos y modelos (`streamlit run app/streamlit_app.py`).
 - `docs/`: informe, diagramas, diccionario de datos (`DICCIONARIO_CURATED.md`) y capturas.
 
 ## Puesta en marcha (Hadoop)
@@ -52,3 +53,10 @@ En Hive, `hive/04_modelado.hql` crea `nba_curated.modelado_partidos` (el pipelin
 
 ## Estado
 Entrega 1 hecha (18/11). Día 4: ensuciado, limpieza con Hive, Parquet y diccionario.
+
+## Panel Streamlit
+```bash
+pip install -r app/requirements.txt
+streamlit run app/streamlit_app.py
+```
+Lee `data/modelado_partidos.parquet` y los resúmenes de `docs/`. La sección "Predecir un partido" usa la API si está encendida (`uvicorn api.main:app`).
